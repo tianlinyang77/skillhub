@@ -7,8 +7,8 @@ Portable [Agent Skills](https://agentskills.io/specification) for [HYGON-AI](htt
 After the repository is published, browse or install skills with the standard [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-npx skills add HYGON-AI/skills --list
-npx skills add HYGON-AI/skills
+npx skills add HYGON-AI/skillhub --list
+npx skills add HYGON-AI/skillhub
 ```
 
 Install one skill for Codex without prompts:
