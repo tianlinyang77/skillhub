@@ -1,0 +1,7 @@
+interface:
+  display_name: "Replace with user-facing name"
+  short_description: "Replace with a short capability description"
+  default_prompt: "Use $replace-with-skill-name to describe a representative task."
+
+policy:
+  allow_implicit_invocation: true

@@ -9,7 +9,10 @@ from pathlib import Path
 from scripts.skillhub import (
     CatalogError,
     load_components,
+    validate_eval_dataset,
     validate_inline_skill_dependencies,
+    validate_lock,
+    validate_markdown_links,
 )
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -62,7 +65,7 @@ class StandaloneSkillTests(unittest.TestCase):
             self.assertEqual(len(errors), 1)
             self.assertIn("inline dependency escapes skill directory", errors[0])
 
-    def test_accepts_bundled_skill_reference(self):
+    def test_rejects_bundled_nested_skill_reference(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             skill_dir = root / "skills" / "self-contained"
@@ -74,7 +77,71 @@ class StandaloneSkillTests(unittest.TestCase):
                 "Load `references/rules/SKILL.md` before continuing.",
                 root,
             )
-            self.assertEqual(errors, [])
+            self.assertEqual(len(errors), 1)
+            self.assertIn("nested SKILL.md dependencies are not allowed", errors[0])
+
+    def test_checks_links_in_reference_markdown(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skill_dir = root / "skills" / "example"
+            reference = skill_dir / "references" / "guide.md"
+            reference.parent.mkdir(parents=True)
+            reference.write_text("Read [missing](missing.md).\n", encoding="utf-8")
+            errors = validate_markdown_links(skill_dir, root)
+            self.assertEqual(len(errors), 1)
+            self.assertIn("broken relative link", errors[0])
+
+
+class EvaluationDatasetTests(unittest.TestCase):
+    def test_accepts_minimum_routing_and_behavior_dataset(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / "evals.json"
+            path.write_text(
+                """{
+  "evaluations": [
+    {"id": "p1", "skill_should_trigger": true, "prompt": "positive one", "expected_behavior": ["do the work"]},
+    {"id": "p2", "skill_should_trigger": true, "prompt": "positive two"},
+    {"id": "p3", "skill_should_trigger": true, "prompt": "positive three"},
+    {"id": "n1", "skill_should_trigger": false, "prompt": "negative one"},
+    {"id": "n2", "skill_should_trigger": false, "prompt": "negative two"}
+  ]
+}
+""",
+                encoding="utf-8",
+            )
+            self.assertEqual(validate_eval_dataset(path, root), [])
+
+    def test_rejects_thin_routing_only_dataset(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = root / "evals.json"
+            path.write_text(
+                '{"evaluations": [{"id": "p1", "skill_should_trigger": true, "prompt": "positive"}]}',
+                encoding="utf-8",
+            )
+            errors = validate_eval_dataset(path, root)
+            self.assertTrue(any("at least 3 positive" in error for error in errors))
+            self.assertTrue(any("at least 2 negative" in error for error in errors))
+            self.assertTrue(any("behavioral assertion" in error for error in errors))
+
+
+class LockFileTests(unittest.TestCase):
+    def test_rejects_invalid_lock_json(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / ".skillhub-lock.json").write_text("not-json\n", encoding="utf-8")
+            errors = validate_lock([], [], root)
+            self.assertEqual(len(errors), 1)
+            self.assertIn("invalid JSON", errors[0])
+
+    def test_accepts_empty_lock_without_remote_components(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / ".skillhub-lock.json").write_text(
+                '{"schema_version": 1, "skills": {}}\n', encoding="utf-8"
+            )
+            self.assertEqual(validate_lock([], [], root), [])
 
 
 def make_record(catalog_dir, category, product, description):

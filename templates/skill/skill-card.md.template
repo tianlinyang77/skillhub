@@ -1,0 +1,29 @@
+# Skill Card
+
+## Summary
+
+Replace with one sentence describing the skill's outcome.
+
+## Owner
+
+Replace with the owning HYGON-AI team and maintainer contact mechanism.
+
+## Source
+
+- Repository: `HYGON-AI/replace-me`
+- Path: `skills/replace-me`
+- Lifecycle: `staging` or `published`
+
+## License
+
+Replace with the SPDX identifier and required attribution files.
+
+## Runtime and permissions
+
+List required operating systems, hardware, network access, tools and write
+surfaces. State `none` explicitly where appropriate.
+
+## Validation
+
+Describe the last representative validation environment without turning a
+partial or synthetic result into a production claim.

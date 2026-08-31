@@ -8,7 +8,7 @@
       "category": "Developer Tools",
       "product": "SkillHub",
       "source": {
-        "repo": "HYGON-AI/skills",
+        "repo": "HYGON-AI/skillhub",
         "ref": "main",
         "path": "skills/skillhub-contributor"
       },

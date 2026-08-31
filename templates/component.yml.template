@@ -1,0 +1,8 @@
+name: Replace with product display name
+repo: HYGON-AI/replace-with-product-repository
+ref: replace-with-reviewed-branch-or-release-tag
+description: Replace with one sentence describing the product and its skills.
+skills:
+  - path: skills/replace-with-skill-name
+    catalog_dir: replace-with-skill-name
+    category: Replace with an existing category when possible

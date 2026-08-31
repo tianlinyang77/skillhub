@@ -24,9 +24,13 @@ Each `catalog_dir` must be unique across the catalog. Keep it equal to the skill
 - The owning team approved public release.
 - `SKILL.md` has only `name` and `description` in YAML frontmatter.
 - The description says both what the skill does and when it should trigger.
-- Relative Markdown links resolve inside the skill directory.
+- The published directory is flat and contains no nested `SKILL.md`.
+- `skill-card.md` records owner, source, license, lifecycle, permissions, and validation scope.
+- `evals/evals.json` contains at least three positive triggers, two negative triggers, and one behavior assertion.
+- Relative Markdown links in `SKILL.md`, `skill-card.md`, and references resolve inside the skill directory.
 - Scripts contain no embedded credentials and have been executed on a representative input.
 - The source repository has an explicit compatible license.
+- Required LICENSE and NOTICE material remains available after isolated installation.
 - The component registry points to an immutable release branch or the team's maintained default branch.
 - Local validation and catalog generation checks pass.
 
@@ -38,18 +42,19 @@ python3 scripts/generate_catalog.py
 python3 scripts/generate_catalog.py --check
 python3 scripts/sync_sources.py --check --component product-slug
 python3 scripts/sync_sources.py --component product-slug
+npx skills add . --list
 ```
 
 After publication, verify discovery without installing:
 
 ```bash
-npx skills add HYGON-AI/skills --list
+npx skills add HYGON-AI/skillhub --list
 ```
 
 Install one skill non-interactively:
 
 ```bash
-npx skills add HYGON-AI/skills --skill example-skill --yes
+npx skills add HYGON-AI/skillhub --skill example-skill --yes
 ```
 
 ## Common failures

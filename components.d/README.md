@@ -7,3 +7,11 @@ Required fields are `name`, `repo`, `description`, and a non-empty `skills` list
 `category` groups the skill in the generated README index and in `skills.sh.json`. Reuse an existing category name when one fits, so the index stays navigable as the catalog grows.
 
 Remote entries are mirrored by `scripts/sync_sources.py`. Local entries are validated in place and are never cloned.
+
+Registration does not by itself grant published status. Every destination
+under `skills/` must also satisfy the flat per-skill layout, ownership,
+licensing, self-containment, `skill-card.md`, and `evals/evals.json` contracts
+described in [`docs/governance/admission.md`](../docs/governance/admission.md).
+
+Start new component files from
+[`templates/component.yml.template`](../templates/component.yml.template).

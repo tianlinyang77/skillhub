@@ -34,6 +34,19 @@ def clone_component(component, destination):
     return run(["git", "-C", str(destination), "rev-parse", "HEAD"])
 
 
+def validate_source_tree(source):
+    source_root = source.resolve()
+    for path in source.rglob("*"):
+        if path.is_symlink():
+            raise CatalogError("{}: symbolic links are not allowed in synchronized skills".format(path))
+        try:
+            path.resolve().relative_to(source_root)
+        except ValueError:
+            raise CatalogError("{}: path resolves outside the synchronized skill".format(path))
+        if not path.is_file() and not path.is_dir():
+            raise CatalogError("{}: special files are not allowed in synchronized skills".format(path))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="report drift without changing the catalog")
@@ -77,6 +90,7 @@ def main():
                 source = checkout / Path(spec["path"])
                 if not source.is_dir() or not (source / "SKILL.md").is_file():
                     raise CatalogError("{}:{} does not contain SKILL.md".format(component["repo"], spec["path"]))
+                validate_source_tree(source)
                 destination = ROOT / "skills" / spec["catalog_dir"]
                 source_digest = file_tree_digest(source)
                 destination_digest = file_tree_digest(destination) if destination.exists() else None
@@ -96,6 +110,7 @@ def main():
                         "ref": component["ref"],
                         "commit": commit,
                         "path": spec["path"],
+                        "content_digest": source_digest,
                     }
 
     if args.check and changed:

@@ -1,0 +1,27 @@
+---
+name: replace-with-lowercase-hyphen-name
+description: State what the skill does, when it should trigger, and the nearest important case where it should not trigger.
+---
+
+# Replace with skill title
+
+## Inputs
+
+List the information, files, repository state, tools and approvals required.
+
+## Outputs
+
+State the concrete files, decisions, reports or external changes produced.
+
+## Workflow
+
+1. Validate inputs and stop safely when a required precondition is absent.
+2. Perform the smallest workflow that achieves the declared output.
+3. Verify the result proportionally to risk.
+4. Report evidence, limitations and remaining manual actions.
+
+## Guardrails
+
+- Define destructive, privileged, networked and externally visible actions.
+- Distinguish dry-run, synthetic and partial validation from production proof.
+- Do not claim success without the evidence required by this workflow.
