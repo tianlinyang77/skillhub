@@ -1,9 +1,8 @@
 # Catalog taxonomy
 
-Ascend's domain-oriented index is useful for accelerator developers, but the
-category must remain metadata rather than a nested filesystem hierarchy. Every
-published skill stays at `skills/<skill-name>/`; `components.d/*.yml` assigns
-its category and the generator builds the index.
+Categories are catalog metadata rather than a nested filesystem hierarchy.
+Every published skill stays at `skills/<skill-name>/`; `components.d/*.yml`
+assigns its category and the generator builds the index.
 
 Prefer one of these initial categories when it fits:
 

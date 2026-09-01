@@ -23,9 +23,9 @@ updating a mirror.
 
 ## Signing profile
 
-NVIDIA demonstrates the value of signed content, but HYGON should not copy a
-signature filename without copying its trust model. Signing becomes a release
-gate only after the repository defines:
+Signing must not become a release claim until the repository has a complete
+and verifiable trust model. It becomes a release gate only after the repository
+defines:
 
 1. the canonical byte representation and digest algorithm;
 2. signer identity and offline or protected key custody;
