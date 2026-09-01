@@ -1,5 +1,5 @@
 name: SkillHub
-repo: HYGON-AI/skills
+repo: HYGON-AI/skillhub
 ref: main
 local: true
 description: Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects.

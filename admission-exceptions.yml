@@ -1,6 +1,7 @@
 # Public source skills discovered on 2026-08-25 but not yet admitted to the
 # portable catalog. Fix these issues in the source repository, then register
 # and synchronize the skill again.
+schema_version: 1
 exceptions:
   - repo: HYGON-AI/inference-cookbook-das
     path: .claude/skills/add-model

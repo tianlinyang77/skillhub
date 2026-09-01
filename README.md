@@ -14,8 +14,26 @@ npx skills add HYGON-AI/skillhub
 Install one skill for Codex without prompts:
 
 ```bash
-npx skills add HYGON-AI/skills --skill skillhub-contributor --agent codex --yes
+npx skills add HYGON-AI/skillhub --skill skillhub-contributor --agent codex --yes
 ```
+
+## Repository structure
+
+The repository separates candidate content, product sources, published skills,
+evaluation evidence, and generated metadata:
+
+| Path | Purpose |
+| --- | --- |
+| [`skills/`](skills) | Flat catalog of published, independently installable skills |
+| [`staging/`](staging) | Catalog-owned `SKILL.md.candidate` files that cannot be discovered |
+| [`components.d/`](components.d) | One reviewed source registration per HYGON-AI product |
+| [`templates/`](templates) | Non-discoverable contribution scaffolds |
+| [`docs/`](docs) | Architecture, admission, evaluation and release policy |
+
+Every direct child of `skills/` is one catalog identity. Published skills must
+not contain nested `SKILL.md` files or depend on sibling skills. See the
+[normative repository layout](docs/architecture/repository-layout.md) and
+[admission policy](docs/governance/admission.md).
 
 ## Skill catalog
 
@@ -45,23 +63,38 @@ npx skills add HYGON-AI/skills --skill skillhub-contributor --agent codex --yes
 
 1. Product teams maintain source skills in `skills/<skill-name>/` in their own repository.
 2. A small `components.d/<product>.yml` file registers source paths and catalog names.
-3. The synchronization workflow mirrors registered content into this repository.
-4. Validation checks naming, frontmatter, links, metadata, secrets, and generated catalog drift.
-5. Approved changes land through pull requests and become installable from this repository.
+3. Admission review checks ownership, licensing, self-containment, routing data, and behavior evidence.
+4. The synchronization workflow mirrors registered content into this repository.
+5. Validation checks naming, frontmatter, resources, evaluation data, secrets, and generated catalog drift.
+6. Approved changes land through pull requests and become installable from this repository.
 
 Catalog maintainers can run:
 
 ```bash
 python3 scripts/validate_skills.py
+python3 scripts/validate_agent_skills_spec.py
 python3 scripts/generate_catalog.py --check
 python3 scripts/sync_sources.py --check --component <product>
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to onboard a product or skill.
 
+Catalog-owned candidates start under `staging/`. Product-owned candidates stay
+in their product repositories until admission; `staging/` is not a second
+product mirror. A candidate entrypoint is named `SKILL.md.candidate` until its
+reviewed promotion into `skills/`, preventing deep-discovery clients from
+installing staging content.
+
 ## Trust model
 
 The catalog publishes reviewed source content; it does not make arbitrary third-party skills trusted. Every product entry records its repository, ref, and source path in [`catalog.json`](catalog.json), and synchronized commits are recorded in [`.skillhub-lock.json`](.skillhub-lock.json). Consumers should still review executable scripts and permissions before installation.
+
+CLI discovery proves format compatibility only. Published status additionally
+requires the owner, license, source and lifecycle recorded in `skill-card.md`,
+plus positive, negative and behavioral cases under `evals/evals.json`.
+The catalog additionally enforces exact remote commit/digest provenance and a
+pinned Agent Skills reference-validation pass; neither check alone proves that
+a Skill's operational behavior is correct.
 
 ## Source attribution
 

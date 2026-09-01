@@ -11,7 +11,14 @@ import sys
 import tempfile
 from pathlib import Path
 
-from skillhub import ROOT, CatalogError, dump_json, file_tree_digest, load_components
+from skillhub import (
+    ROOT,
+    CatalogError,
+    dump_json,
+    file_tree_digest,
+    load_components,
+    validate_skill_tree,
+)
 
 
 def run(command, cwd=None):
@@ -30,8 +37,27 @@ def clone_component(component, destination):
         "--branch", component["ref"], url, str(destination),
     ])
     paths = [spec["path"] for spec in component["skills"]]
-    subprocess.check_call(["git", "-C", str(destination), "sparse-checkout", "set"] + paths)
+    subprocess.check_call([
+        "git", "-C", str(destination), "sparse-checkout", "set", "--",
+    ] + paths)
     return run(["git", "-C", str(destination), "rev-parse", "HEAD"])
+
+
+def validate_source_tree(source):
+    source_root = source.resolve()
+    for path in source.rglob("*"):
+        if path.is_symlink():
+            raise CatalogError("{}: symbolic links are not allowed in synchronized skills".format(path))
+        try:
+            path.resolve().relative_to(source_root)
+        except ValueError:
+            raise CatalogError("{}: path resolves outside the synchronized skill".format(path))
+        if not path.is_file() and not path.is_dir():
+            raise CatalogError("{}: special files are not allowed in synchronized skills".format(path))
+    package_errors = validate_skill_tree(source, source.parent)
+    if package_errors:
+        raise CatalogError("source package is not publishable: {}".format(
+            "; ".join(package_errors)))
 
 
 def main():
@@ -56,11 +82,21 @@ def main():
     lock = {}
     lock_path = ROOT / ".skillhub-lock.json"
     if lock_path.exists():
-        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        try:
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            print("ERROR: .skillhub-lock.json is invalid: {}".format(exc))
+            return 1
+    if not isinstance(lock, dict):
+        print("ERROR: .skillhub-lock.json must contain an object")
+        return 1
     lock.setdefault("schema_version", 1)
     lock.setdefault("skills", {})
+    if lock["schema_version"] != 1 or not isinstance(lock["skills"], dict):
+        print("ERROR: .skillhub-lock.json must use schema_version 1 and an object-valued skills field")
+        return 1
 
-    changed = []
+    changed = set()
     with tempfile.TemporaryDirectory(prefix="skillhub-sync-") as temp:
         temp_root = Path(temp)
         for component in components:
@@ -77,26 +113,50 @@ def main():
                 source = checkout / Path(spec["path"])
                 if not source.is_dir() or not (source / "SKILL.md").is_file():
                     raise CatalogError("{}:{} does not contain SKILL.md".format(component["repo"], spec["path"]))
+                validate_source_tree(source)
                 destination = ROOT / "skills" / spec["catalog_dir"]
                 source_digest = file_tree_digest(source)
                 destination_digest = file_tree_digest(destination) if destination.exists() else None
-                if source_digest != destination_digest:
-                    changed.append(spec["catalog_dir"])
-                    print("{} {}".format("would update" if args.check else "update", destination.relative_to(ROOT)))
-                    if not args.check:
-                        staged = temp_root / "staged" / spec["catalog_dir"]
-                        staged.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copytree(str(source), str(staged))
-                        if destination.exists():
-                            shutil.rmtree(str(destination))
-                        shutil.copytree(str(staged), str(destination))
-                if not args.check:
-                    lock["skills"][spec["catalog_dir"]] = {
+                if args.check:
+                    name = spec["catalog_dir"]
+                    entry = lock["skills"].get(name)
+                    expected_lock = {
                         "repo": component["repo"],
                         "ref": component["ref"],
                         "commit": commit,
                         "path": spec["path"],
+                        "content_digest": source_digest,
                     }
+                    if not isinstance(entry, dict):
+                        changed.add(name)
+                        print("drift {}: lock entry is missing or invalid".format(name))
+                    else:
+                        for field, expected_value in expected_lock.items():
+                            if entry.get(field) != expected_value:
+                                changed.add(name)
+                                print("drift {}: lock {} does not match resolved source".format(
+                                    name, field))
+                    if source_digest != destination_digest:
+                        changed.add(name)
+                        print("drift {}: published tree does not match resolved source".format(name))
+                    continue
+
+                if source_digest != destination_digest:
+                    changed.add(spec["catalog_dir"])
+                    print("{} {}".format("would update" if args.check else "update", destination.relative_to(ROOT)))
+                    staged = temp_root / "staged" / spec["catalog_dir"]
+                    staged.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(str(source), str(staged))
+                    if destination.exists():
+                        shutil.rmtree(str(destination))
+                    shutil.copytree(str(staged), str(destination))
+                lock["skills"][spec["catalog_dir"]] = {
+                    "repo": component["repo"],
+                    "ref": component["ref"],
+                    "commit": commit,
+                    "path": spec["path"],
+                    "content_digest": source_digest,
+                }
 
     if args.check and changed:
         print("{} mirrored skill(s) differ from their source.".format(len(changed)))

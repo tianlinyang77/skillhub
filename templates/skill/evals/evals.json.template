@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "skill": "replace-with-lowercase-hyphen-name",
+  "evaluations": [
+    {
+      "id": "replace-positive-one",
+      "skill_should_trigger": true,
+      "prompt": "Replace with a realistic positive user request.",
+      "expected_behavior": [
+        "Replace with one observable behavior assertion."
+      ]
+    },
+    {
+      "id": "replace-positive-two",
+      "skill_should_trigger": true,
+      "prompt": "Replace with a second positive request using different wording."
+    },
+    {
+      "id": "replace-positive-three",
+      "skill_should_trigger": true,
+      "prompt": "Replace with a boundary-positive request."
+    },
+    {
+      "id": "replace-negative-one",
+      "skill_should_trigger": false,
+      "prompt": "Replace with a nearby task owned by another skill."
+    },
+    {
+      "id": "replace-negative-two",
+      "skill_should_trigger": false,
+      "prompt": "Replace with a vocabulary match that should not trigger this skill."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+---
+name: replace-with-lowercase-hyphen-name
+description: State what the skill does, when it should trigger, and the nearest important case where it should not trigger.
+license: Replace with an SPDX identifier or a reference to the bundled LICENSE file.
+compatibility: Remove this field when there are no specific environment requirements; otherwise keep it at or below 500 characters.
+metadata:
+  author: Replace with the owning HYGON-AI team.
+  version: "0.1.0"
+# allowed-tools is experimental. If needed, use one space-separated string.
+# allowed-tools: Read Bash(git:*)
+---
+
+# Replace with skill title
+
+## Inputs
+
+List the information, files, repository state, tools and approvals required.
+
+## Outputs
+
+State the concrete files, decisions, reports or external changes produced.
+
+## Workflow
+
+1. Validate inputs and stop safely when a required precondition is absent.
+2. Perform the smallest workflow that achieves the declared output.
+3. Verify the result proportionally to risk.
+4. Report evidence, limitations and remaining manual actions.
+
+Replace with the optional References section, or remove this line.
+
+## Guardrails
+
+- Define destructive, privileged, networked and externally visible actions.
+- Distinguish dry-run, synthetic and partial validation from production proof.
+- Do not claim success without the evidence required by this workflow.
