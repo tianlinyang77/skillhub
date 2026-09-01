@@ -16,6 +16,8 @@ here. Generated skill synchronization updates may be grouped by release.
 - Non-discoverable contribution templates.
 - Product-owned Skill generator for deterministic naming, placeholder
   replacement, LICENSE and NOTICE copying, and component registration.
+- Optional reference scaffolds that are linked conditionally from generated
+  `SKILL.md` entrypoints.
 
 ### Changed
 
@@ -26,6 +28,8 @@ here. Generated skill synchronization updates may be grouped by release.
   scaffold placeholders are rejected before publication.
 - Pull-request validation runs on Python 3.11 and 3.12, while DCO and scheduled
   synchronization use the declared minimum Python 3.11 runtime.
+- The product Skill generator warns about obvious standard-license declaration
+  mismatches without replacing mandatory human license and NOTICE review.
 - Published skills require a skill card and a minimum routing/behavior dataset.
 - Nested `SKILL.md` dependencies are rejected in the flat catalog.
 - Relative Markdown links are validated recursively across each skill package.

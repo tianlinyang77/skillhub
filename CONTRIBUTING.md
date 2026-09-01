@@ -55,9 +55,12 @@ overwrite an existing skill, rejects unapproved repositories, categories and
 generic names, and requires a non-empty source `LICENSE` unless
 `--license-file` names another reviewed license text. It copies a root
 `NOTICE`, `NOTICE.txt` or `NOTICE.md` automatically; use `--notice-file` for a
-different required notice. The script does not infer legal terms: reviewers
-must confirm that `--license` matches the copied text and that all NOTICE
-obligations are satisfied.
+different required notice. With `--with-references`, it also creates a linked
+`references/details.md` scaffold and tells the agent when to read it. The
+script emits a non-blocking warning for a small set of obvious standard-license
+mismatches; it does not determine legal terms or compatibility. Reviewers must
+confirm that `--license` matches the copied text and that all NOTICE obligations
+are satisfied.
 
 The generated Skill Card remains `staging` and its author-owned sections and
 Eval prompts contain `TODO` markers. Replace them with real workflow,

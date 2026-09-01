@@ -27,6 +27,8 @@ State the concrete files, decisions, reports or external changes produced.
 3. Verify the result proportionally to risk.
 4. Report evidence, limitations and remaining manual actions.
 
+Replace with the optional References section, or remove this line.
+
 ## Guardrails
 
 - Define destructive, privileged, networked and externally visible actions.

@@ -38,6 +38,29 @@ except ModuleNotFoundError:  # Direct execution adds scripts/, not the repositor
 
 CATALOG_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_ROOT = CATALOG_ROOT / "templates" / "skill"
+LICENSE_TEXT_READ_LIMIT = 256 * 1024
+LICENSE_FAMILY_SIGNATURES = {
+    "Apache-2.0": ("apache license", "version 2.0"),
+    "MIT": ("permission is hereby granted, free of charge",),
+    "BSD": ("redistribution and use in source and binary forms",),
+    "MPL-2.0": ("mozilla public license", "version 2.0"),
+    "MulanPSL-2.0": ("mulan permissive software license", "version 2"),
+}
+LICENSE_FAMILY_DECLARATIONS = {
+    "Apache-2.0": re.compile(
+        r"(?<![A-Za-z0-9.-])Apache-2\.0(?![A-Za-z0-9.-])", re.I
+    ),
+    "MIT": re.compile(r"(?<![A-Za-z0-9.-])MIT(?![A-Za-z0-9.-])", re.I),
+    "BSD": re.compile(
+        r"(?<![A-Za-z0-9.-])BSD-[234]-Clause(?![A-Za-z0-9.-])", re.I
+    ),
+    "MPL-2.0": re.compile(
+        r"(?<![A-Za-z0-9.-])MPL-2\.0(?![A-Za-z0-9.-])", re.I
+    ),
+    "MulanPSL-2.0": re.compile(
+        r"(?<![A-Za-z0-9.-])MulanPSL-2\.0(?![A-Za-z0-9.-])", re.I
+    ),
+}
 
 
 class ScaffoldError(ValueError):
@@ -175,8 +198,40 @@ def read_template(template_root, relative_path):
     return path.read_text(encoding="utf-8")
 
 
+def license_mismatch_warning(license_id, license_file):
+    """Return a best-effort warning for an obvious license declaration mismatch."""
+    try:
+        text = license_file.read_bytes()[:LICENSE_TEXT_READ_LIMIT].decode(
+            "utf-8", errors="ignore"
+        )
+    except OSError:
+        return None
+    lowered = text.lower()
+    detected = [
+        family
+        for family, signatures in LICENSE_FAMILY_SIGNATURES.items()
+        if all(signature in lowered for signature in signatures)
+    ]
+    if len(detected) != 1:
+        return None
+    family = detected[0]
+    if LICENSE_FAMILY_DECLARATIONS[family].search(license_id):
+        return None
+    return (
+        "WARNING: copied license text looks like {}, but --license declares {!r}; "
+        "review the SPDX expression and bundled license text manually."
+    ).format(family, license_id)
+
+
 def render_skill(config, template_root):
     text = read_template(template_root, "SKILL.md.template")
+    references_section = ""
+    if config.with_references:
+        references_section = (
+            "## References\n\n"
+            "- Read [Detailed workflow](references/details.md) when this task needs "
+            "domain rules or long procedures that do not fit in this entrypoint."
+        )
     replacements = {
         "replace-with-lowercase-hyphen-name": config.name,
         "State what the skill does, when it should trigger, and the nearest important case where it should not trigger.": json.dumps(
@@ -191,6 +246,7 @@ def render_skill(config, template_root):
         "# Replace with skill title": f"# {display_name(config.name)}",
         "List the information, files, repository state, tools and approvals required.": "TODO: Document the required inputs, repository state, tools, and approvals.",
         "State the concrete files, decisions, reports or external changes produced.": "TODO: Document the concrete outputs and externally visible changes.",
+        "Replace with the optional References section, or remove this line.": references_section,
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
@@ -416,6 +472,12 @@ def create_scaffold(config, template_root=TEMPLATE_ROOT):
     validate_config(config)
     files = render_files(config, template_root)
     component_path, component_text = render_component(config)
+    license_warning = license_mismatch_warning(
+        config.license_id, config.license_file
+    )
+
+    if license_warning:
+        print(license_warning)
 
     if config.dry_run:
         print(f"Would create {config.destination}")
@@ -518,7 +580,9 @@ def parse_args(argv=None):
         "--with-openai", action="store_true", help="create agents/openai.yaml"
     )
     parser.add_argument(
-        "--with-references", action="store_true", help="create references/details.md"
+        "--with-references",
+        action="store_true",
+        help="create references/details.md and link it from SKILL.md",
     )
     parser.add_argument(
         "--dry-run", action="store_true", help="show planned paths without writing"

@@ -16,8 +16,10 @@ from scripts.new_skill import (
     ScaffoldError,
     config_from_args,
     create_scaffold,
+    license_mismatch_warning,
     parse_args,
 )
+from scripts.skillhub import validate_markdown_links
 
 
 class NewSkillTests(unittest.TestCase):
@@ -87,6 +89,11 @@ class NewSkillTests(unittest.TestCase):
                 any(path.suffix == ".template" for path in skill_dir.rglob("*"))
             )
             self.assertFalse((skill_dir / "README.md").exists())
+            skill_text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn(
+                "[Detailed workflow](references/details.md)", skill_text
+            )
+            self.assertEqual(validate_markdown_links(skill_dir, source_root), [])
 
             authored = "\n".join(
                 path.read_text(encoding="utf-8")
@@ -116,6 +123,50 @@ class NewSkillTests(unittest.TestCase):
                     }
                 ],
             )
+
+    def test_omits_reference_link_when_reference_scaffold_is_disabled(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source_root, catalog_root = self.make_roots(temp)
+            config = self.make_config(
+                source_root, catalog_root, with_references=False
+            )
+
+            self.create(config)
+
+            skill_dir = source_root / "skills" / config.name
+            skill_text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+            self.assertFalse((skill_dir / "references").exists())
+            self.assertNotIn("references/details.md", skill_text)
+            self.assertNotIn("optional References section", skill_text)
+
+    def test_warns_for_obvious_license_mismatch_without_blocking(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source_root, catalog_root = self.make_roots(temp)
+            config = self.make_config(
+                source_root, catalog_root, license_id="MIT"
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                create_scaffold(config, TEMPLATE_ROOT)
+
+            self.assertIn("WARNING:", output.getvalue())
+            self.assertIn("looks like Apache-2.0", output.getvalue())
+            self.assertTrue(config.destination.is_dir())
+
+    def test_license_warning_accepts_matching_or_composite_declaration(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source_root, _ = self.make_roots(temp)
+            license_file = source_root / "LICENSE"
+
+            self.assertIsNone(
+                license_mismatch_warning("Apache-2.0", license_file)
+            )
+            self.assertIsNone(
+                license_mismatch_warning("MIT OR Apache-2.0", license_file)
+            )
+            license_file.write_text("Custom reviewed terms\n", encoding="utf-8")
+            self.assertIsNone(license_mismatch_warning("LicenseRef-Custom", license_file))
 
     def test_copies_existing_notice_automatically(self):
         with tempfile.TemporaryDirectory() as temp:

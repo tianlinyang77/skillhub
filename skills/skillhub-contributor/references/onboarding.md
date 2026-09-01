@@ -21,7 +21,9 @@ generated card deliberately remains `staging`; complete every `TODO`, replace
 the Eval prompts with real routing boundaries, and set `published` only after
 the evidence is ready. Commit and merge the product repository first. The
 component change remains local in SkillHub until the source ref contains the
-reviewed Skill.
+reviewed Skill. With `--with-references`, the generated `SKILL.md` links to the
+new `references/details.md` scaffold so contributors can state when detailed
+material should be loaded.
 
 ## Component schema
 
