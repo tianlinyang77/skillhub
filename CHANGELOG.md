@@ -8,7 +8,7 @@ here. Generated skill synchronization updates may be grouped by release.
 ### Added
 
 - Layered repository foundation for published skills, staging, evaluation,
-  product federation, benchmark evidence, and future plugin distribution.
+  product federation, and plugin distribution.
 - Normative repository layout, admission, evaluation, publishing, and
   supply-chain documentation.
 - Production repository-settings baseline for protected reviews, required

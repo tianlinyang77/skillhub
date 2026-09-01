@@ -29,7 +29,6 @@ evaluation evidence, generated metadata, and plugin distribution:
 | [`components.d/`](components.d) | One reviewed source registration per HYGON-AI product |
 | [`templates/`](templates) | Non-discoverable contribution scaffolds |
 | [`eval/`](eval) | Shared evaluation contract and future runners |
-| [`benchmarks/`](benchmarks) | Evidence contract for measurable skill claims |
 | [`docs/`](docs) | Architecture, admission, evaluation and release policy |
 | [`plugins.d/`](plugins.d) | Reviewed plugin source definitions |
 | [`plugins/`](plugins) | Generated installable plugin bundles |

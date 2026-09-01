@@ -17,7 +17,6 @@ supporting material belongs in `references/` with ordinary Markdown names.
 ```text
 skills/
 ├── .github/                  # Pull-request templates, ownership and CI
-├── benchmarks/               # Benchmark evidence contract and future indexer
 ├── components.d/             # Product source registry; one file per product
 ├── docs/                     # Architecture, governance and release contracts
 ├── eval/                     # Shared evaluation contract and future runner
@@ -34,10 +33,6 @@ skills/
 ├── skills.sh.json            # Generated skills CLI metadata
 └── .skillhub-lock.json       # Resolved remote source commits
 ```
-
-The combined design rationale and the boundaries inherited from AMD, NVIDIA,
-Ascend, and the portable format are documented in
-[`reference-model.md`](reference-model.md).
 
 ## Directory ownership
 
@@ -65,8 +60,7 @@ skills/<skill-name>/
 ├── scripts/                  # Optional deterministic, tested helpers
 ├── assets/                   # Optional templates and output resources
 ├── LICENSE                   # Required; installations do not inherit the repository root license
-├── NOTICE                    # Required when the source license requires it
-└── BENCHMARK.md              # Required only when publishing performance claims
+└── NOTICE                    # Required when the source license requires it
 ```
 
 Use `references/`, not `docs/`, `reference/`, or nested skill directories, so

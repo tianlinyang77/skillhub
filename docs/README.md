@@ -5,7 +5,6 @@ catalog. Root-level documents remain short entry points; detailed policy and
 architecture belong here.
 
 - [Repository layout](architecture/repository-layout.md)
-- [Reference model](architecture/reference-model.md)
 - [Admission policy](governance/admission.md)
 - [Repository settings baseline](governance/repository-settings.md)
 - [Catalog taxonomy](governance/taxonomy.md)
