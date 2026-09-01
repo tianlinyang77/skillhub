@@ -4,6 +4,10 @@ Every published skill carries `evals/evals.json`. Structural validation is a
 required catalog gate; model-executed routing and behavior evaluation can be
 added to CI without changing the per-skill dataset shape.
 
+Every dataset declares `"schema_version": 1` and a `"skill"` value matching
+the published directory. Unknown top-level or per-case fields are rejected so
+typos cannot silently weaken an assertion.
+
 ## Minimum dataset
 
 - At least three cases with `skill_should_trigger: true`.

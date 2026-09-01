@@ -8,13 +8,18 @@
 - Catalog mirrors and metadata are produced through pull requests.
 - Synchronization rejects symlinks, special files and paths outside the source package before copying.
 - Catalog validation verifies each remote lock entry against its component registration and published tree digest.
+- Pull-request validation resolves every remote ref independently and requires
+  the resolved commit, source digest, lock entry and published tree to agree.
+- GitHub Actions dependencies and compatibility CLIs are pinned to reviewed
+  commits or versions rather than floating major tags.
 
-## Required next integrity gate
+## Enforced remote integrity gate
 
-Before the first remote product skill is published, PR CI must additionally
-resolve the registered remote ref independently and prove that it still maps to
-the recorded commit. Local validation already checks the source registration,
-lock structure, mirrored tree digest, and pre-copy file safety.
+`scripts/sync_sources.py --check` clones each registered remote ref without
+modifying the catalog and fails unless its resolved commit and tree digest
+match `.skillhub-lock.json` and the published directory. Apply mode performs
+the same pre-copy path, symlink, special-file and package-boundary checks before
+updating a mirror.
 
 ## Signing profile
 

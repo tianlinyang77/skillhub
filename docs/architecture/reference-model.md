@@ -14,7 +14,8 @@ or authoritative implementation.
 ## Resulting HYGON model
 
 - `skills/` contains only published, flat, independently installable skills.
-- `staging/` contains only catalog-owned candidates and never affects discovery.
+- `staging/` contains only catalog-owned `SKILL.md.candidate` entrypoints; CI
+  proves that normal and full-depth discovery expose only published skills.
 - `components.d/` preserves product repositories as source of truth.
 - `skill-card.md`, `evals/evals.json`, and conditional `BENCHMARK.md` carry
   review evidence next to each skill.

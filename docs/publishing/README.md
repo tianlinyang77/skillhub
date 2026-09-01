@@ -13,8 +13,10 @@
 ## Catalog-owned skill
 
 Catalog ownership is reserved for SkillHub-wide workflows. Start in
-`staging/`, use the contribution templates, and promote to `skills/` only when
-the same evidence required from product skills is present.
+`staging/<skill-name>/SKILL.md.candidate`, use the contribution templates, and
+promote to `skills/` with a real `SKILL.md` only when the same evidence required
+from product skills is present. `SKILL.md` is forbidden below `staging/` so
+full-depth discovery cannot publish a candidate.
 
 ## Generated content
 

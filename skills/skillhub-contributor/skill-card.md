@@ -1,3 +1,13 @@
+---
+schema_version: 1
+owner: HYGON-AI SkillHub maintainers
+source:
+  repo: HYGON-AI/skillhub
+  path: skills/skillhub-contributor
+license: Apache-2.0
+lifecycle: published
+---
+
 # Skill Card
 
 ## Summary

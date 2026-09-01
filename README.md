@@ -25,7 +25,7 @@ evaluation evidence, generated metadata, and plugin distribution:
 | Path | Purpose |
 | --- | --- |
 | [`skills/`](skills) | Flat catalog of published, independently installable skills |
-| [`staging/`](staging) | Catalog-owned candidates that are not published |
+| [`staging/`](staging) | Catalog-owned `SKILL.md.candidate` files that cannot be discovered |
 | [`components.d/`](components.d) | One reviewed source registration per HYGON-AI product |
 | [`templates/`](templates) | Non-discoverable contribution scaffolds |
 | [`eval/`](eval) | Shared evaluation contract and future runners |
@@ -76,6 +76,7 @@ Catalog maintainers can run:
 
 ```bash
 python3 scripts/validate_skills.py
+python3 scripts/validate_agent_skills_spec.py
 python3 scripts/generate_catalog.py --check
 python3 scripts/sync_sources.py --check --component <product>
 ```
@@ -84,7 +85,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to onboard a product or skill.
 
 Catalog-owned candidates start under `staging/`. Product-owned candidates stay
 in their product repositories until admission; `staging/` is not a second
-product mirror.
+product mirror. A candidate entrypoint is named `SKILL.md.candidate` until its
+reviewed promotion into `skills/`, preventing deep-discovery clients from
+installing staging content.
 
 ## Trust model
 
@@ -93,6 +96,9 @@ The catalog publishes reviewed source content; it does not make arbitrary third-
 CLI discovery proves format compatibility only. Published status additionally
 requires the owner, license, source and lifecycle recorded in `skill-card.md`,
 plus positive, negative and behavioral cases under `evals/evals.json`.
+The catalog additionally enforces exact remote commit/digest provenance and a
+pinned Agent Skills reference-validation pass; neither check alone proves that
+a Skill's operational behavior is correct.
 
 ## Source attribution
 

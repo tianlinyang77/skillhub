@@ -1,3 +1,13 @@
+---
+schema_version: 1
+owner: Replace with the owning HYGON-AI team.
+source:
+  repo: HYGON-AI/replace-me
+  path: skills/replace-me
+license: Replace with the SPDX identifier.
+lifecycle: published
+---
+
 # Skill Card
 
 ## Summary

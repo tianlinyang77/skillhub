@@ -1,4 +1,6 @@
 {
+  "schema_version": 1,
+  "skill": "skillhub-contributor",
   "evaluations": [
     {
       "id": "register-product-skill",

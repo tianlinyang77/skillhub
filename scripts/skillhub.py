@@ -6,6 +6,7 @@ from __future__ import print_function
 import hashlib
 import json
 import re
+import unicodedata
 from pathlib import Path, PurePosixPath
 
 import yaml
@@ -14,12 +15,72 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 OFFICIAL_GITHUB_OWNER = "HYGON-AI"
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+EVAL_ID_RE = SKILL_NAME_RE
 REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 REF_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 INLINE_SKILL_PATH_RE = re.compile(r"`([^`\s]*SKILL\.md)`")
+ALLOWED_SKILL_FRONTMATTER_FIELDS = frozenset((
+    "name",
+    "description",
+    "license",
+    "compatibility",
+    "metadata",
+    "allowed-tools",
+))
+ALLOWED_COMPONENT_FIELDS = frozenset((
+    "name", "repo", "ref", "local", "description", "skills",
+))
+ALLOWED_COMPONENT_SKILL_FIELDS = frozenset((
+    "path", "catalog_dir", "category",
+))
+ALLOWED_EVAL_FIELDS = frozenset((
+    "id",
+    "prompt",
+    "skill_should_trigger",
+    "expected_behavior",
+    "unexpected_behavior",
+    "logs_contain",
+    "files_exist",
+))
+MAX_DESCRIPTION_LENGTH = 1024
+MAX_COMPATIBILITY_LENGTH = 500
+MAX_SKILL_LINES = 500
+MAX_SKILL_FILES = 256
+MAX_SKILL_FILE_BYTES = 5 * 1024 * 1024
+MAX_SKILL_PACKAGE_BYTES = 20 * 1024 * 1024
+FORBIDDEN_PACKAGE_PARTS = frozenset((
+    ".git",
+    ".hg",
+    ".svn",
+    ".venv",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "node_modules",
+    "venv",
+))
+FORBIDDEN_PACKAGE_FILES = frozenset((
+    ".DS_Store",
+    ".env",
+    "Thumbs.db",
+))
+REQUIRED_SKILL_CARD_HEADINGS = (
+    "Summary",
+    "Owner",
+    "Source",
+    "License",
+    "Runtime and permissions",
+    "Validation",
+)
+ALLOWED_SKILL_CARD_FIELDS = frozenset((
+    "schema_version", "owner", "source", "license", "lifecycle",
+))
+ALLOWED_SKILL_CARD_SOURCE_FIELDS = frozenset(("repo", "path"))
+ALLOWED_EXCEPTION_FIELDS = frozenset(("repo", "path", "reasons"))
 SECRET_PATTERNS = (
     ("private key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
     ("GitHub token", re.compile(r"\bgh(?:p|o|u|s|r)_[A-Za-z0-9]{20,}\b")),
@@ -37,13 +98,20 @@ class CatalogError(Exception):
     pass
 
 
-def load_yaml(path):
+def display_path(path, root=ROOT):
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
+
+def load_yaml(path, root=ROOT):
     try:
         value = yaml.safe_load(path.read_text(encoding="utf-8"))
     except Exception as exc:
-        raise CatalogError("{}: invalid YAML: {}".format(path.relative_to(ROOT), exc))
+        raise CatalogError("{}: invalid YAML: {}".format(display_path(path, root), exc))
     if not isinstance(value, dict):
-        raise CatalogError("{}: expected a YAML mapping".format(path.relative_to(ROOT)))
+        raise CatalogError("{}: expected a YAML mapping".format(display_path(path, root)))
     return value
 
 
@@ -61,7 +129,13 @@ def safe_relative_path(value, label):
     if not isinstance(value, str) or not value.strip():
         raise CatalogError("{} must be a non-empty string".format(label))
     path = PurePosixPath(value)
-    if path.is_absolute() or ".." in path.parts or "\\" in value:
+    if (
+            path.is_absolute()
+            or ".." in path.parts
+            or "\\" in value
+            or value.startswith(("-", ":"))
+            or any(ord(character) < 32 for character in value)
+    ):
         raise CatalogError("{} must be a safe repository-relative POSIX path".format(label))
     return value
 
@@ -74,13 +148,26 @@ def load_components(root=ROOT):
 
     components = []
     seen_catalog_dirs = {}
+    seen_component_names = set()
+    seen_repositories = set()
     for path in paths:
-        data = load_yaml(path)
+        if not SKILL_NAME_RE.match(path.stem):
+            raise CatalogError("{}: component filename must use lowercase hyphen-case".format(
+                path.relative_to(root)))
+        data = load_yaml(path, root)
+        extra_fields = sorted(set(data) - ALLOWED_COMPONENT_FIELDS)
+        if extra_fields:
+            raise CatalogError("{}: unsupported fields: {}".format(
+                path.relative_to(root), ", ".join(extra_fields)))
         for field in ("name", "repo", "description", "skills"):
             if field not in data:
                 raise CatalogError("{}: missing required field '{}'".format(path.relative_to(root), field))
         if not isinstance(data["name"], str) or not data["name"].strip():
             raise CatalogError("{}: name must be a non-empty string".format(path.relative_to(root)))
+        if data["name"] in seen_component_names:
+            raise CatalogError("{}: duplicate component name '{}'".format(
+                path.relative_to(root), data["name"]))
+        seen_component_names.add(data["name"])
         repo = str(data["repo"])
         if not REPO_RE.match(repo):
             raise CatalogError("{}: repo must use owner/name form".format(path.relative_to(root)))
@@ -88,8 +175,17 @@ def load_components(root=ROOT):
         if owner != OFFICIAL_GITHUB_OWNER:
             raise CatalogError("{}: repo must be owned by {}".format(
                 path.relative_to(root), OFFICIAL_GITHUB_OWNER))
+        if repo in seen_repositories:
+            raise CatalogError("{}: repository '{}' is registered more than once".format(
+                path.relative_to(root), repo))
+        seen_repositories.add(repo)
         ref = data.get("ref", "main")
-        if not isinstance(ref, str) or not REF_RE.match(ref) or ".." in ref:
+        if (
+                not isinstance(ref, str)
+                or not REF_RE.match(ref)
+                or ".." in ref
+                or ref.startswith("-")
+        ):
             raise CatalogError("{}: ref contains unsafe characters".format(path.relative_to(root)))
         if not isinstance(data["description"], str) or not data["description"].strip():
             raise CatalogError("{}: description must be a non-empty string".format(path.relative_to(root)))
@@ -107,6 +203,10 @@ def load_components(root=ROOT):
             label = "{}: skills[{}]".format(path.relative_to(root), index)
             if not isinstance(skill, dict):
                 raise CatalogError("{} must be a mapping".format(label))
+            extra_skill_fields = sorted(set(skill) - ALLOWED_COMPONENT_SKILL_FIELDS)
+            if extra_skill_fields:
+                raise CatalogError("{}: unsupported fields: {}".format(
+                    label, ", ".join(extra_skill_fields)))
             for field in ("path", "catalog_dir", "category"):
                 if field not in skill:
                     raise CatalogError("{}: missing '{}'".format(label, field))
@@ -129,22 +229,251 @@ def load_components(root=ROOT):
     return components
 
 
-def parse_skill_frontmatter(path):
+def parse_frontmatter_document(path, root=ROOT):
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
-        raise CatalogError("{}: SKILL.md must start with YAML frontmatter".format(path.relative_to(ROOT)))
+    if not lines or lines[0] != "---":
+        raise CatalogError("{}: document must start with an exact YAML frontmatter delimiter (---)".format(
+            display_path(path, root)))
     try:
-        end = next(i for i in range(1, len(lines)) if lines[i].strip() == "---")
+        end = next(i for i in range(1, len(lines)) if lines[i] == "---")
     except StopIteration:
-        raise CatalogError("{}: SKILL.md frontmatter is not closed".format(path.relative_to(ROOT)))
+        raise CatalogError("{}: YAML frontmatter is not closed".format(
+            display_path(path, root)))
     try:
-        metadata = yaml.safe_load("\n".join(lines[1:end]))
+        frontmatter = yaml.safe_load("\n".join(lines[1:end]))
     except Exception as exc:
-        raise CatalogError("{}: invalid frontmatter: {}".format(path.relative_to(ROOT), exc))
-    if not isinstance(metadata, dict):
-        raise CatalogError("{}: frontmatter must be a mapping".format(path.relative_to(ROOT)))
-    return metadata, text, len(lines)
+        raise CatalogError("{}: invalid frontmatter: {}".format(
+            display_path(path, root), exc))
+    if not isinstance(frontmatter, dict):
+        raise CatalogError("{}: frontmatter must be a mapping".format(
+            display_path(path, root)))
+    body = "\n".join(lines[end + 1:]).strip()
+    return frontmatter, body, text, len(lines)
+
+
+def parse_skill_frontmatter(path, root=ROOT):
+    frontmatter, _, text, line_count = parse_frontmatter_document(path, root)
+    return frontmatter, text, line_count
+
+
+def validate_skill_frontmatter(frontmatter, expected_name, rel, source_name="SKILL.md"):
+    """Validate the complete Agent Skills frontmatter contract.
+
+    This intentionally supplements the public ``skills-ref`` implementation:
+    the specification requires ``metadata`` to be a string-to-string mapping,
+    while the current reference parser coerces nested values to strings before
+    validation and therefore cannot reject authored lists or objects.
+    """
+    errors = []
+    location = "{}/{}".format(rel, source_name)
+    extra = sorted(set(frontmatter) - ALLOWED_SKILL_FRONTMATTER_FIELDS)
+    if extra:
+        errors.append("{}: unsupported frontmatter fields: {}".format(
+            location, ", ".join(extra)))
+
+    name = frontmatter.get("name")
+    if not isinstance(name, str) or not name:
+        errors.append("{}: name must be a non-empty string".format(location))
+    else:
+        if len(name) > 64 or not SKILL_NAME_RE.match(name):
+            errors.append(
+                "{}: name must be at most 64 characters of lowercase letters, digits, and single hyphens".format(
+                    location))
+        if name != expected_name:
+            errors.append("{}: name must equal catalog_dir '{}'".format(
+                location, expected_name))
+
+    description = frontmatter.get("description")
+    if not isinstance(description, str) or not description.strip():
+        errors.append("{}: description must be a non-empty string".format(location))
+    elif len(description) > MAX_DESCRIPTION_LENGTH:
+        errors.append("{}: description exceeds {} characters".format(
+            location, MAX_DESCRIPTION_LENGTH))
+    elif "<" in description or ">" in description:
+        errors.append("{}: description cannot contain angle brackets".format(location))
+
+    if "license" in frontmatter:
+        license_value = frontmatter["license"]
+        if not isinstance(license_value, str) or not license_value.strip():
+            errors.append("{}: license must be a non-empty string".format(location))
+
+    if "compatibility" in frontmatter:
+        compatibility = frontmatter["compatibility"]
+        if not isinstance(compatibility, str) or not compatibility.strip():
+            errors.append("{}: compatibility must be a non-empty string".format(location))
+        elif len(compatibility) > MAX_COMPATIBILITY_LENGTH:
+            errors.append("{}: compatibility exceeds {} characters".format(
+                location, MAX_COMPATIBILITY_LENGTH))
+
+    if "allowed-tools" in frontmatter:
+        allowed_tools = frontmatter["allowed-tools"]
+        if not isinstance(allowed_tools, str) or not allowed_tools.strip():
+            errors.append("{}: allowed-tools must be a non-empty space-separated string".format(location))
+        elif any(character in allowed_tools for character in "\r\n\t"):
+            errors.append("{}: allowed-tools must be one space-separated line".format(location))
+
+    if "metadata" in frontmatter:
+        metadata = frontmatter["metadata"]
+        if not isinstance(metadata, dict):
+            errors.append("{}: metadata must be a string-to-string mapping".format(location))
+        else:
+            for key, value in metadata.items():
+                if not isinstance(key, str) or not key.strip() or not isinstance(value, str):
+                    errors.append(
+                        "{}: metadata keys and values must be strings; invalid key {!r}".format(
+                            location, key))
+    return errors
+
+
+def validate_skill_tree(skill_dir, root=ROOT):
+    """Reject non-portable or unexpectedly large published packages."""
+    errors = []
+    files = []
+    casefolded_paths = {}
+    for path in sorted(skill_dir.rglob("*")):
+        rel = path.relative_to(skill_dir)
+        rel_text = str(rel).replace("\\", "/")
+        normalized = unicodedata.normalize("NFC", rel_text).casefold()
+        previous = casefolded_paths.get(normalized)
+        if previous is not None and previous != rel_text:
+            errors.append("{}: path collides case-insensitively with {}".format(
+                path.relative_to(root), previous))
+        else:
+            casefolded_paths[normalized] = rel_text
+
+        if path.is_symlink():
+            errors.append("{}: symbolic links are not allowed in published skills".format(
+                path.relative_to(root)))
+            continue
+        if not path.is_file() and not path.is_dir():
+            errors.append("{}: special files are not allowed in published skills".format(
+                path.relative_to(root)))
+            continue
+        if any(part in FORBIDDEN_PACKAGE_PARTS for part in rel.parts):
+            errors.append("{}: generated, VCS, dependency, or environment directories are not publishable".format(
+                path.relative_to(root)))
+        if path.is_file():
+            files.append(path)
+            if path.name in FORBIDDEN_PACKAGE_FILES or path.suffix == ".pyc":
+                errors.append("{}: generated or environment file is not publishable".format(
+                    path.relative_to(root)))
+            size = path.stat().st_size
+            if size > MAX_SKILL_FILE_BYTES:
+                errors.append("{}: file exceeds the {} MiB package limit".format(
+                    path.relative_to(root), MAX_SKILL_FILE_BYTES // (1024 * 1024)))
+
+    if len(files) > MAX_SKILL_FILES:
+        errors.append("{}: package contains {} files; maximum is {}".format(
+            skill_dir.relative_to(root), len(files), MAX_SKILL_FILES))
+    total_size = sum(path.stat().st_size for path in files)
+    if total_size > MAX_SKILL_PACKAGE_BYTES:
+        errors.append("{}: package is {:.2f} MiB; maximum is {} MiB".format(
+            skill_dir.relative_to(root),
+            total_size / float(1024 * 1024),
+            MAX_SKILL_PACKAGE_BYTES // (1024 * 1024),
+        ))
+    return errors
+
+
+def validate_skill_card(path, record, root=ROOT):
+    errors = []
+    rel = record["dir"].relative_to(root)
+    try:
+        card, body, _, _ = parse_frontmatter_document(path, root)
+    except CatalogError as exc:
+        return [str(exc)]
+
+    extra = sorted(set(card) - ALLOWED_SKILL_CARD_FIELDS)
+    if extra:
+        errors.append("{}: unsupported frontmatter fields: {}".format(
+            path.relative_to(root), ", ".join(extra)))
+    if card.get("schema_version") != 1:
+        errors.append("{}: schema_version must equal 1".format(path.relative_to(root)))
+    if not isinstance(card.get("owner"), str) or not card["owner"].strip():
+        errors.append("{}: owner must be a non-empty string".format(path.relative_to(root)))
+    if not isinstance(card.get("license"), str) or not card["license"].strip():
+        errors.append("{}: license must be a non-empty string".format(path.relative_to(root)))
+    else:
+        skill_license = record["metadata"].get("license")
+        if isinstance(skill_license, str) and card["license"] != skill_license:
+            errors.append("{}: license must match SKILL.md frontmatter license '{}'".format(
+                path.relative_to(root), skill_license))
+    if card.get("lifecycle") != "published":
+        errors.append("{}: lifecycle must equal 'published'".format(path.relative_to(root)))
+
+    source = card.get("source")
+    if not isinstance(source, dict):
+        errors.append("{}: source must be a mapping".format(path.relative_to(root)))
+    else:
+        source_extra = sorted(set(source) - ALLOWED_SKILL_CARD_SOURCE_FIELDS)
+        if source_extra:
+            errors.append("{}: unsupported source fields: {}".format(
+                path.relative_to(root), ", ".join(source_extra)))
+        expected = {
+            "repo": record["component"]["repo"],
+            "path": record["spec"]["path"],
+        }
+        for field, expected_value in expected.items():
+            if source.get(field) != expected_value:
+                errors.append("{}: source.{} must equal '{}'".format(
+                    path.relative_to(root), field, expected_value))
+
+    for heading in REQUIRED_SKILL_CARD_HEADINGS:
+        if not re.search(r"^## {}\s*$".format(re.escape(heading)), body, re.MULTILINE):
+            errors.append("{}: missing required heading '## {}'".format(
+                path.relative_to(root), heading))
+    if re.search(r"\b(?:TODO|TBD)\b|Replace with", body, re.IGNORECASE):
+        errors.append("{}: unresolved template placeholder".format(path.relative_to(root)))
+    return errors
+
+
+def validate_staging(root=ROOT):
+    """Keep catalog-owned candidates valid but undiscoverable by deep scans."""
+    errors = []
+    staging_dir = root / "staging"
+    if not staging_dir.is_dir():
+        return ["staging directory is required"]
+
+    for discoverable in sorted(staging_dir.rglob("SKILL.md")):
+        errors.append("{}: discoverable SKILL.md is not allowed in staging".format(
+            discoverable.relative_to(root)))
+
+    candidate_dirs = []
+    for entry in sorted(staging_dir.iterdir()):
+        if entry.is_symlink():
+            errors.append("{}: symbolic links are not allowed in staging".format(
+                entry.relative_to(root)))
+        elif entry.is_dir():
+            candidate_dirs.append(entry)
+        elif entry.is_file() and entry.name != "README.md":
+            errors.append("{}: staging root accepts only README.md and candidate directories".format(
+                entry.relative_to(root)))
+        elif not entry.is_file():
+            errors.append("{}: special files are not allowed in staging".format(
+                entry.relative_to(root)))
+
+    for candidate_dir in candidate_dirs:
+        rel = candidate_dir.relative_to(root)
+        if not SKILL_NAME_RE.match(candidate_dir.name):
+            errors.append("{}: candidate directory must use lowercase hyphen-case".format(rel))
+        candidate_file = candidate_dir / "SKILL.md.candidate"
+        if not candidate_file.is_file():
+            errors.append("{}: SKILL.md.candidate is required".format(rel))
+            continue
+        try:
+            frontmatter, _, _, line_count = parse_frontmatter_document(
+                candidate_file, root)
+        except CatalogError as exc:
+            errors.append(str(exc))
+            continue
+        errors.extend(validate_skill_frontmatter(
+            frontmatter, candidate_dir.name, rel, "SKILL.md.candidate"))
+        if line_count > MAX_SKILL_LINES:
+            errors.append("{}/SKILL.md.candidate: {} lines; keep it at or below {}".format(
+                rel, line_count, MAX_SKILL_LINES))
+        errors.extend(validate_skill_tree(candidate_dir, root))
+    return errors
 
 
 def registered_skills(components, root=ROOT):
@@ -155,7 +484,7 @@ def registered_skills(components, root=ROOT):
             skill_file = skill_dir / "SKILL.md"
             if not skill_file.is_file():
                 raise CatalogError("{}: registered skill is missing SKILL.md".format(skill_dir.relative_to(root)))
-            metadata, text, line_count = parse_skill_frontmatter(skill_file)
+            metadata, text, line_count = parse_skill_frontmatter(skill_file, root)
             record = {
                 "component": component,
                 "spec": spec,
@@ -187,6 +516,10 @@ def validate_lock(components, records, root=ROOT):
         lock = load_json(lock_path, root)
     except CatalogError as exc:
         return [str(exc)]
+    lock_extra = sorted(set(lock) - {"schema_version", "skills"})
+    if lock_extra:
+        errors.append(".skillhub-lock.json: unsupported fields: {}".format(
+            ", ".join(lock_extra)))
     if lock.get("schema_version") != 1:
         errors.append(".skillhub-lock.json: schema_version must equal 1")
     entries = lock.get("skills")
@@ -215,6 +548,12 @@ def validate_lock(components, records, root=ROOT):
         if not isinstance(entry, dict):
             errors.append(".skillhub-lock.json: skill '{}' must be an object".format(name))
             continue
+        entry_extra = sorted(set(entry) - {
+            "repo", "ref", "commit", "path", "content_digest",
+        })
+        if entry_extra:
+            errors.append(".skillhub-lock.json: skill '{}': unsupported fields: {}".format(
+                name, ", ".join(entry_extra)))
         exact_fields = {
             "repo": component["repo"],
             "ref": component["ref"],
@@ -234,6 +573,64 @@ def validate_lock(components, records, root=ROOT):
             record = record_by_name.get(name)
             if record and file_tree_digest(record["dir"]) != digest:
                 errors.append(".skillhub-lock.json: skill '{}'.content_digest does not match the published tree".format(name))
+    return errors
+
+
+def validate_admission_exceptions(components, root=ROOT):
+    errors = []
+    path = root / "admission-exceptions.yml"
+    if not path.is_file():
+        return ["admission-exceptions.yml is required"]
+    try:
+        data = load_yaml(path, root)
+    except CatalogError as exc:
+        return [str(exc)]
+    extra = sorted(set(data) - {"schema_version", "exceptions"})
+    if extra:
+        errors.append("admission-exceptions.yml: unsupported fields: {}".format(
+            ", ".join(extra)))
+    if data.get("schema_version") != 1:
+        errors.append("admission-exceptions.yml: schema_version must equal 1")
+    exceptions = data.get("exceptions")
+    if not isinstance(exceptions, list):
+        return errors + ["admission-exceptions.yml: exceptions must be a list"]
+
+    registered_sources = {
+        (component["repo"], spec["path"])
+        for component in components
+        for spec in component["skills"]
+    }
+    seen = set()
+    for index, exception in enumerate(exceptions):
+        label = "admission-exceptions.yml: exceptions[{}]".format(index)
+        if not isinstance(exception, dict):
+            errors.append("{} must be a mapping".format(label))
+            continue
+        extra_fields = sorted(set(exception) - ALLOWED_EXCEPTION_FIELDS)
+        if extra_fields:
+            errors.append("{}: unsupported fields: {}".format(
+                label, ", ".join(extra_fields)))
+        repo = exception.get("repo")
+        if not isinstance(repo, str) or not REPO_RE.match(repo) or not repo.startswith(OFFICIAL_GITHUB_OWNER + "/"):
+            errors.append("{}: repo must use HYGON-AI/name form".format(label))
+        try:
+            source_path = safe_relative_path(
+                exception.get("path"), "{}.path".format(label))
+        except CatalogError as exc:
+            errors.append(str(exc))
+            source_path = None
+        reasons = exception.get("reasons")
+        if not isinstance(reasons, list) or not reasons or not all(
+                isinstance(reason, str) and reason.strip() for reason in reasons):
+            errors.append("{}: reasons must be a non-empty list of non-empty strings".format(label))
+        identity = (repo, source_path)
+        if source_path is not None:
+            if identity in seen:
+                errors.append("{}: duplicate exception for {}:{}".format(
+                    label, repo, source_path))
+            seen.add(identity)
+            if identity in registered_sources:
+                errors.append("{}: an excepted candidate cannot also be registered for publication".format(label))
     return errors
 
 
@@ -282,17 +679,31 @@ def validate_markdown_links(skill_dir, root=ROOT):
     return errors
 
 
-def validate_eval_dataset(path, root=ROOT):
+def validate_eval_dataset(path, root=ROOT, expected_skill=None):
     errors = []
     try:
         value = load_json(path, root)
     except CatalogError as exc:
         return [str(exc)]
+    allowed_top_level = {"schema_version", "skill", "evaluations"}
+    extra_top_level = sorted(set(value) - allowed_top_level)
+    if extra_top_level:
+        errors.append("{}: unsupported top-level fields: {}".format(
+            path.relative_to(root), ", ".join(extra_top_level)))
+    if value.get("schema_version") != 1:
+        errors.append("{}: schema_version must equal 1".format(path.relative_to(root)))
+    if expected_skill is not None and value.get("skill") != expected_skill:
+        errors.append("{}: skill must equal '{}'".format(
+            path.relative_to(root), expected_skill))
+    elif expected_skill is None and (
+            not isinstance(value.get("skill"), str) or not value["skill"].strip()):
+        errors.append("{}: skill must be a non-empty string".format(path.relative_to(root)))
     evaluations = value.get("evaluations")
     if not isinstance(evaluations, list) or not evaluations:
-        return ["{}: evaluations must be a non-empty list".format(path.relative_to(root))]
+        return errors + ["{}: evaluations must be a non-empty list".format(path.relative_to(root))]
 
     seen_ids = set()
+    seen_prompts = set()
     positives = 0
     negatives = 0
     behavior_cases = 0
@@ -301,9 +712,15 @@ def validate_eval_dataset(path, root=ROOT):
         if not isinstance(case, dict):
             errors.append("{} must be an object".format(label))
             continue
+        extra_case_fields = sorted(set(case) - ALLOWED_EVAL_FIELDS)
+        if extra_case_fields:
+            errors.append("{}: unsupported fields: {}".format(
+                label, ", ".join(extra_case_fields)))
         case_id = case.get("id")
         if not isinstance(case_id, str) or not case_id.strip():
             errors.append("{}: id must be a non-empty string".format(label))
+        elif not EVAL_ID_RE.match(case_id):
+            errors.append("{}: id must use lowercase hyphen-case".format(label))
         elif case_id in seen_ids:
             errors.append("{}: duplicate id '{}'".format(label, case_id))
         else:
@@ -311,6 +728,10 @@ def validate_eval_dataset(path, root=ROOT):
         prompt = case.get("prompt")
         if not isinstance(prompt, str) or not prompt.strip():
             errors.append("{}: prompt must be a non-empty string".format(label))
+        elif prompt.strip() in seen_prompts:
+            errors.append("{}: duplicate prompt".format(label))
+        else:
+            seen_prompts.add(prompt.strip())
         should_trigger = case.get("skill_should_trigger")
         if not isinstance(should_trigger, bool):
             errors.append("{}: skill_should_trigger must be true or false".format(label))
@@ -361,24 +782,19 @@ def validate_catalog(root=ROOT):
         errors.append("skills/{} is not registered in components.d".format(orphan))
 
     errors.extend(validate_lock(components, records, root))
+    errors.extend(validate_admission_exceptions(components, root))
+    errors.extend(validate_staging(root))
 
     for record in records:
         rel = record["dir"].relative_to(root)
-        metadata = record["metadata"]
-        extra = sorted(set(metadata) - {"name", "description"})
-        if extra:
-            errors.append("{}/SKILL.md: unsupported frontmatter fields: {}".format(rel, ", ".join(extra)))
-        if metadata.get("name") != record["spec"]["catalog_dir"]:
-            errors.append("{}/SKILL.md: name must equal catalog_dir '{}'".format(rel, record["spec"]["catalog_dir"]))
-        description = metadata.get("description")
-        if not isinstance(description, str) or not description.strip():
-            errors.append("{}/SKILL.md: description must be a non-empty string".format(rel))
-        elif len(description) > 1024:
-            errors.append("{}/SKILL.md: description exceeds 1024 characters".format(rel))
-        elif "<" in description or ">" in description:
-            errors.append("{}/SKILL.md: description cannot contain angle brackets".format(rel))
-        if record["line_count"] > 500:
-            errors.append("{}/SKILL.md: {} lines; keep it at or below 500".format(rel, record["line_count"]))
+        frontmatter = record["metadata"]
+        errors.extend(validate_skill_frontmatter(
+            frontmatter, record["spec"]["catalog_dir"], rel))
+        if record["line_count"] > MAX_SKILL_LINES:
+            errors.append("{}/SKILL.md: {} lines; keep it at or below {}".format(
+                rel, record["line_count"], MAX_SKILL_LINES))
+
+        errors.extend(validate_skill_tree(record["dir"], root))
 
         nested_skill_files = [
             path for path in record["dir"].rglob("SKILL.md")
@@ -389,9 +805,7 @@ def validate_catalog(root=ROOT):
                 path.relative_to(root)))
 
         for path in record["dir"].rglob("*"):
-            if path.is_symlink():
-                errors.append("{}: symbolic links are not allowed in published skills".format(path.relative_to(root)))
-            if path.is_file() and path.stat().st_size <= 2 * 1024 * 1024:
+            if path.is_file() and path.stat().st_size <= MAX_SKILL_FILE_BYTES:
                 try:
                     content = path.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
@@ -408,20 +822,44 @@ def validate_catalog(root=ROOT):
         skill_card = record["dir"] / "skill-card.md"
         if not skill_card.is_file():
             errors.append("{}: skill-card.md is required for published skills".format(rel))
+        else:
+            errors.extend(validate_skill_card(skill_card, record, root))
+
+        license_file = record["dir"] / "LICENSE"
+        if not license_file.is_file() or license_file.stat().st_size == 0:
+            errors.append("{}: a non-empty LICENSE file is required in every published package".format(rel))
 
         eval_file = record["dir"] / "evals" / "evals.json"
         if not eval_file.is_file():
             errors.append("{}: evals/evals.json is required for published skills".format(rel))
         else:
-            errors.extend(validate_eval_dataset(eval_file, root))
+            errors.extend(validate_eval_dataset(
+                eval_file, root, record["spec"]["catalog_dir"]))
 
         openai_yaml = record["dir"] / "agents" / "openai.yaml"
         if openai_yaml.exists():
             try:
-                interface = load_yaml(openai_yaml).get("interface", {})
+                interface = load_yaml(openai_yaml, root).get("interface", {})
+                if not isinstance(interface, dict):
+                    errors.append("{}: interface must be a mapping".format(
+                        openai_yaml.relative_to(root)))
+                    interface = {}
                 for field in ("display_name", "short_description", "default_prompt"):
                     if not isinstance(interface.get(field), str) or not interface[field].strip():
                         errors.append("{}: interface.{} must be a non-empty string".format(openai_yaml.relative_to(root), field))
+                lengths = {
+                    "display_name": 64,
+                    "short_description": 100,
+                    "default_prompt": 1024,
+                }
+                for field, limit in lengths.items():
+                    if isinstance(interface.get(field), str) and len(interface[field]) > limit:
+                        errors.append("{}: interface.{} exceeds {} characters".format(
+                            openai_yaml.relative_to(root), field, limit))
+                expected_invocation = "$" + record["spec"]["catalog_dir"]
+                if isinstance(interface.get("default_prompt"), str) and expected_invocation not in interface["default_prompt"]:
+                    errors.append("{}: interface.default_prompt must mention '{}'".format(
+                        openai_yaml.relative_to(root), expected_invocation))
             except CatalogError as exc:
                 errors.append(str(exc))
         else:

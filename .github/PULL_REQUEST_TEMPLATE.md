@@ -16,5 +16,6 @@ Describe the skill, owning product, source repository, and intended user prompts
 - [ ] The published skill is flat and contains no nested `SKILL.md` or sibling-skill dependency.
 - [ ] No credentials, private endpoints, customer data, or unpublished information are included.
 - [ ] Local validation and generated-catalog checks pass.
+- [ ] Pinned Agent Skills reference validation and remote provenance checks pass.
 - [ ] CLI discovery lists only intended published skills, not templates or staging content.
 - [ ] Commits include [DCO sign-off](https://developercertificate.org/).

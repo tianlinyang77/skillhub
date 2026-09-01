@@ -7,6 +7,7 @@ architecture belong here.
 - [Repository layout](architecture/repository-layout.md)
 - [Reference model](architecture/reference-model.md)
 - [Admission policy](governance/admission.md)
+- [Repository settings baseline](governance/repository-settings.md)
 - [Catalog taxonomy](governance/taxonomy.md)
 - [Evaluation contract](evaluation/README.md)
 - [Publishing and release flow](publishing/README.md)

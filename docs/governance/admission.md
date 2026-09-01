@@ -20,14 +20,20 @@ Before synchronization or publication, record:
 
 - The skill is one flat, lowercase hyphen-case directory.
 - `SKILL.md` is at most 500 lines and contains clear trigger boundaries.
+- Frontmatter passes both the catalog's strict six-field/type checks and the
+  pinned Agent Skills reference validator.
 - All required resources remain inside the installed skill directory.
 - No nested `SKILL.md`, sibling-skill dependency, symlink or escaping path is
   present.
-- `skill-card.md` identifies owner, source, license and lifecycle.
-- `evals/evals.json` contains positive, negative and behavior evidence.
+- `skill-card.md` has schema version 1, matches the component source, and
+  identifies owner, license and published lifecycle.
+- `evals/evals.json` has schema version 1, matches the Skill identity, and
+  contains positive, negative and behavior evidence.
 - Executable helpers are reviewed and tested on representative input.
 - Secret, license, link, file-size and generated-catalog checks pass.
 - Remote content resolves to a recorded commit in `.skillhub-lock.json`.
+- The independently resolved remote tree, recorded commit, lock digest and
+  published package are byte-consistent.
 - Required repository checks and owning-team review pass.
 
 ## Staging and exceptions
@@ -37,9 +43,17 @@ there while its trigger boundary, licensing or behavior evidence is repaired.
 Remote product skills should normally remain only in their source repository
 until admitted.
 
-`admission-exceptions.yml` records known candidates that are not currently
-eligible. An exception is not a waiver and must never cause a failing skill to
-appear in `skills/`.
+Catalog-owned candidates use `staging/<skill-name>/SKILL.md.candidate`. A real
+`SKILL.md` is forbidden anywhere below `staging/` because full-depth discovery
+would make it installable before admission. Promotion must explicitly move the
+candidate under `skills/`, rename the entrypoint, register its source and add
+all required publication evidence.
+
+`admission-exceptions.yml` uses schema version 1 and records known candidates
+that are not currently eligible. Duplicate entries, unsafe paths, malformed
+reasons, and candidates simultaneously registered for publication are rejected.
+An exception is not a waiver and must never cause a failing skill to appear in
+`skills/`.
 
 ## Removal and deprecation
 

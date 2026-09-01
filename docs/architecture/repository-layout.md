@@ -25,7 +25,7 @@ skills/
 ├── plugins/                  # Generated installable plugin bundles
 ├── schemas/                  # Machine-readable repository contracts
 ├── scripts/                  # Validation, synchronization and generation tools
-├── staging/                  # Catalog-owned candidates; never published
+├── staging/                  # Catalog-owned SKILL.md.candidate files
 ├── templates/                # Non-discoverable contribution scaffolds
 ├── tests/                    # Validator, generator and fixture tests
 ├── skills/                   # Published, flat, independently installable skills
@@ -46,7 +46,7 @@ Ascend, and the portable format are documented in
 | `components.d/` | Catalog maintainers and product owners | Yes, through PR |
 | `skills/<name>/` for remote components | Registered product repository | No; synchronize it |
 | `skills/<name>/` for `local: true` components | This repository | Yes, through PR |
-| `staging/` | This repository | Yes, but never treat it as published |
+| `staging/` | This repository | Yes; only `SKILL.md.candidate`, never `SKILL.md` |
 | `catalog.json`, `skills.sh.json` | Generator output | No |
 | `.skillhub-lock.json` | Synchronization output | No |
 | `plugins/` | Plugin build output | No, except its directory documentation |
@@ -56,7 +56,7 @@ Ascend, and the portable format are documented in
 ```text
 skills/<skill-name>/
 ├── SKILL.md                  # Required instructions and trigger metadata
-├── skill-card.md             # Required owner, source, license and lifecycle
+├── skill-card.md             # Required structured owner, source, license and lifecycle
 ├── evals/
 │   └── evals.json            # Required routing and behavior cases
 ├── agents/
@@ -64,7 +64,7 @@ skills/<skill-name>/
 ├── references/               # Optional detailed documentation
 ├── scripts/                  # Optional deterministic, tested helpers
 ├── assets/                   # Optional templates and output resources
-├── LICENSE                   # Required when root licensing is not self-contained
+├── LICENSE                   # Required; installations do not inherit the repository root license
 ├── NOTICE                    # Required when the source license requires it
 └── BENCHMARK.md              # Required only when publishing performance claims
 ```
@@ -72,6 +72,16 @@ skills/<skill-name>/
 Use `references/`, not `docs/`, `reference/`, or nested skill directories, so
 all published packages have one predictable shape. Templates use suffixes such
 as `.template` so discovery tools do not mistake scaffolding for real skills.
+
+`SKILL.md` frontmatter follows the six-field Agent Skills contract. Required
+fields are `name` and `description`; optional fields are `license`,
+`compatibility`, `metadata`, and experimental `allowed-tools`. Additional
+catalog metadata belongs in component registration, the structured Skill Card,
+or another validated sidecar, not in portable frontmatter.
+
+Published packages are bounded to 256 files, 5 MiB per file and 20 MiB total.
+Generated caches, dependency trees, virtual environments, VCS metadata,
+symlinks, special files and case-colliding paths are rejected.
 
 ## Lifecycle
 
@@ -90,4 +100,7 @@ product source or catalog prototype
 
 Product-owned candidates remain in their product repositories until admitted.
 `staging/` is only for catalog-owned prototypes and review fixtures; it is not
-a second mirror of a product repository.
+a second mirror of a product repository. Candidate entrypoints are named
+`SKILL.md.candidate`; validation renames them only inside an isolated temporary
+directory. A real `SKILL.md` anywhere below `staging/` is rejected so CLI
+full-depth discovery cannot expose an unreviewed candidate.

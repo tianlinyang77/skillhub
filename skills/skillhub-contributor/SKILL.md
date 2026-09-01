@@ -1,6 +1,11 @@
 ---
 name: skillhub-contributor
 description: Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md, registering a HYGON-AI product repository in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures.
+license: Apache-2.0
+compatibility: Requires Python 3.11+, Git, and network access when resolving or synchronizing remote HYGON-AI repositories.
+metadata:
+  author: HYGON-AI
+  version: "1.0.0"
 ---
 
 # Contribute to Hygon SkillHub
@@ -21,9 +26,12 @@ product repository or inside this installed skill.
 3. Start from the SkillHub `templates/skill/` scaffold. Add `skill-card.md`, `evals/evals.json`, and required license or NOTICE material.
 4. Keep `SKILL.md` focused on procedures the agent cannot infer. Put detailed knowledge in `references/`, deterministic helpers in `scripts/`, and output material in `assets/`. Do not nest another `SKILL.md`.
 5. Add or update one `components.d/<product>.yml` file in SkillHub. Map every source `path` to a globally unique `catalog_dir` and choose a category.
-6. Run `python3 scripts/validate_skills.py` and `python3 scripts/generate_catalog.py --check` from the SkillHub root.
-7. For a remote product source, preview synchronization with `python3 scripts/sync_sources.py --check --component <component-file-stem>`. Apply it only after reviewing the reported destinations.
-8. Verify `npx skills add . --list` discovers only published skills.
+6. Run `python3 scripts/validate_skills.py`, `python3 scripts/validate_agent_skills_spec.py`, and `python3 scripts/generate_catalog.py --check` from the SkillHub root.
+7. For a remote product source, preview synchronization with `python3 scripts/sync_sources.py --check --component <component-file-stem>`. The check must prove the ref, resolved commit, source digest, lock entry, and published tree agree. Apply it only after reviewing the reported destinations.
+8. Verify the pinned `npx skills@1.5.23 add . --list` and `--full-depth`
+   discovery commands both list exactly the registered published skills. A
+   catalog-owned staging entrypoint must remain `SKILL.md.candidate` until
+   promotion.
 9. Submit the source change first, then the SkillHub registration or sync change.
 
 Read [onboarding.md](references/onboarding.md) for the component schema, release checklist, and troubleshooting commands.

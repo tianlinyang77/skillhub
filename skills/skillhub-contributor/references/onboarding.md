@@ -17,16 +17,26 @@ skills:
 
 Use `local: true` only for a skill whose source of truth is the SkillHub repository itself. Remote components are cloned from GitHub during synchronization.
 
+For a catalog-owned prototype, begin with
+`staging/<skill-name>/SKILL.md.candidate`. Never use a real `SKILL.md` below
+`staging/`; deep discovery can install it before review. During promotion, move
+the candidate into `skills/<skill-name>/`, rename the entrypoint to `SKILL.md`,
+add its local component registration, and add the same Skill Card, Eval and
+license evidence required from product-owned skills.
+
 Each `catalog_dir` must be unique across the catalog. Keep it equal to the skill frontmatter `name` unless a temporary compatibility alias is unavoidable.
 
 ## Release checklist
 
 - The owning team approved public release.
-- `SKILL.md` has only `name` and `description` in YAML frontmatter.
+- `SKILL.md` uses only the six Agent Skills fields; `metadata` keys and values
+  are strings and client/catalog fields do not leak into portable frontmatter.
 - The description says both what the skill does and when it should trigger.
 - The published directory is flat and contains no nested `SKILL.md`.
-- `skill-card.md` records owner, source, license, lifecycle, permissions, and validation scope.
-- `evals/evals.json` contains at least three positive triggers, two negative triggers, and one behavior assertion.
+- `skill-card.md` uses schema version 1 and binds owner, component source,
+  license and published lifecycle.
+- `evals/evals.json` uses schema version 1, names the Skill, and contains at
+  least three positive triggers, two negative triggers, and one behavior assertion.
 - Relative Markdown links in `SKILL.md`, `skill-card.md`, and references resolve inside the skill directory.
 - Scripts contain no embedded credentials and have been executed on a representative input.
 - The source repository has an explicit compatible license.
@@ -38,11 +48,13 @@ Each `catalog_dir` must be unique across the catalog. Keep it equal to the skill
 
 ```bash
 python3 scripts/validate_skills.py
+python3 scripts/validate_agent_skills_spec.py
 python3 scripts/generate_catalog.py
 python3 scripts/generate_catalog.py --check
 python3 scripts/sync_sources.py --check --component product-slug
 python3 scripts/sync_sources.py --component product-slug
-npx skills add . --list
+npx --yes skills@1.5.23 add . --list
+npx --yes skills@1.5.23 add . --list --full-depth
 ```
 
 After publication, verify discovery without installing:

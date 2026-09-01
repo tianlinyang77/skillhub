@@ -1,4 +1,6 @@
 {
+  "schema_version": 1,
+  "skill": "replace-with-lowercase-hyphen-name",
   "evaluations": [
     {
       "id": "replace-positive-one",

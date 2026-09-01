@@ -11,6 +11,8 @@ here. Generated skill synchronization updates may be grouped by release.
   product federation, benchmark evidence, and future plugin distribution.
 - Normative repository layout, admission, evaluation, publishing, and
   supply-chain documentation.
+- Production repository-settings baseline for protected reviews, required
+  checks, DCO, private vulnerability reporting, and synchronization authority.
 - Non-discoverable contribution templates.
 
 ### Changed
@@ -20,3 +22,16 @@ here. Generated skill synchronization updates may be grouped by release.
 - Relative Markdown links are validated recursively across each skill package.
 - Remote lock entries carry and verify the source-tree SHA-256 digest.
 - Synchronization rejects symlinks and special files before copying source content.
+- Agent Skills frontmatter now supports and type-checks all six specification
+  fields while rejecting vendor-specific top-level fields.
+- Skill Cards and Eval datasets now carry schema version and source/identity
+  bindings that are validated before publication.
+- Remote checks now bind the resolved ref, commit, source digest, lock entry
+  and published tree; published packages also have file-count, size, cache and
+  cross-platform path-collision limits.
+- Admission exceptions now use a validated schema and cannot simultaneously
+  identify a registered published source.
+- Staging candidates now use `SKILL.md.candidate`; real `SKILL.md` files below
+  `staging/` are rejected and full-depth CLI discovery is verified in CI.
+- CI now pins external Actions and CLI versions, runs the pinned Agent Skills
+  reference validator, verifies CLI discovery, and enforces DCO sign-offs.

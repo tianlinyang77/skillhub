@@ -5,7 +5,9 @@ Hygon SkillHub is a publication catalog. Product teams own their source skills s
 ## Repository lifecycle
 
 - Product-owned candidates remain in their HYGON-AI product repository until admission.
-- Catalog-owned prototypes may use `staging/<skill-name>/`; staging content is never published or indexed.
+- Catalog-owned prototypes may use `staging/<skill-name>/SKILL.md.candidate`;
+  a real `SKILL.md` is forbidden anywhere below `staging/` so deep discovery
+  cannot expose candidates.
 - Only direct children of `skills/` are published catalog identities.
 - Generated mirrors, catalog files, lock files and plugin bundles are never repaired by hand.
 
@@ -14,6 +16,10 @@ Start from [`templates/skill/`](templates/skill) and read the
 [admission policy](docs/governance/admission.md), and
 [evaluation contract](docs/evaluation/README.md). Reuse the stable categories
 in the [catalog taxonomy](docs/governance/taxonomy.md).
+
+Workflow files are not enforcement by themselves. Before production release,
+administrators must apply and verify the
+[repository settings baseline](docs/governance/repository-settings.md).
 
 ## Publication boundary
 
@@ -34,8 +40,10 @@ Do not register or mirror an unchanged third-party or upstream skill as a HYGON-
    python3 scripts/sync_sources.py --component <product>
    python3 scripts/generate_catalog.py
    python3 scripts/validate_skills.py
+   python3 scripts/validate_agent_skills_spec.py
    python3 scripts/generate_catalog.py --check
-   npx skills add . --list
+   npx --yes skills@1.5.23 add . --list
+   npx --yes skills@1.5.23 add . --list --full-depth
    ```
 
 7. Verify discovery from a clean checkout, then open a pull request with the owning team as reviewers.
@@ -43,24 +51,35 @@ Do not register or mirror an unchanged third-party or upstream skill as a HYGON-
 ## Add a catalog-owned skill
 
 Use catalog ownership only for SkillHub-wide workflows. Begin under `staging/`,
-complete the same admission evidence as a product skill, then promote it to
-`skills/`, add `local: true` to its component definition, generate the catalog,
-and validate.
+write the entrypoint as `SKILL.md.candidate`, and complete the same admission
+evidence as a product skill. Promotion is a reviewed change that moves the
+candidate to `skills/`, renames the entrypoint to `SKILL.md`, adds `local: true`
+to its component definition, generates the catalog, and validates both normal
+and full-depth discovery.
 
 ## Skill requirements
 
 - Folder and frontmatter names use lowercase hyphen-case and match exactly.
-- YAML frontmatter contains only `name` and `description` until the validator adopts additional specification fields.
+- YAML frontmatter uses only Agent Skills fields: required `name` and
+  `description`, plus optional `license`, `compatibility`, `metadata`, and
+  experimental `allowed-tools`. Put vendor fields such as version, author and
+  tags inside `metadata`, whose keys and values must all be strings.
 - The description explains capability, trigger conditions, and the nearest important exclusion.
 - Keep `SKILL.md` at or below 500 lines; move details into `references/`.
 - Keep the published catalog flat. Do not place another `SKILL.md` inside a skill.
 - Bundle every required dependency inside the skill directory. Do not depend on sibling skills or source-repository files that an installer will not copy.
-- Add `skill-card.md` with the owner, source, license, lifecycle, runtime permissions, and validation boundary.
-- Add `evals/evals.json` with at least three positive triggers, two negative triggers, and one behavioral assertion.
+- Add a schema-versioned `skill-card.md` with machine-readable owner, source,
+  license and lifecycle frontmatter plus the required human-readable sections.
+- Add schema-versioned `evals/evals.json` with the matching skill identity, at
+  least three positive triggers, two negative triggers, and one behavioral
+  assertion.
 - Use only the standard optional directories `agents/`, `references/`, `scripts/`, and `assets/` unless a documented format requires another path.
 - Put repeatable deterministic operations in tested `scripts/`.
 - Do not include credentials, private endpoints, personal data, generated caches, or unrelated documentation.
 - Do not request broader permissions than the workflow requires.
+- Keep packages at or below 256 files, 5 MiB per file and 20 MiB total. Do not
+  publish VCS metadata, virtual environments, dependency trees, caches or
+  case-colliding paths.
 
 ## Pull request checklist
 
@@ -75,8 +94,11 @@ and validate.
 - [ ] `evals/evals.json` contains the minimum positive, negative, and behavioral evidence.
 - [ ] The skill contains no nested `SKILL.md` or sibling-skill dependency.
 - [ ] `python3 scripts/validate_skills.py` passes.
+- [ ] `python3 scripts/validate_agent_skills_spec.py` passes against the pinned reference implementation.
 - [ ] `python3 scripts/generate_catalog.py --check` passes.
-- [ ] `npx skills add . --list` discovers only the intended published skills.
+- [ ] `python3 scripts/sync_sources.py --check` proves every remote ref, commit, digest, lock entry and mirror agree.
+- [ ] `npx --yes skills@1.5.23 add . --list` discovers only the intended published skills.
+- [ ] `npx --yes skills@1.5.23 add . --list --full-depth` also discovers only the intended published skills.
 - [ ] No mirrored files were edited only in the catalog.
 
 Use `git commit --signoff` so the contribution records [Developer Certificate of Origin](https://developercertificate.org/) agreement.
