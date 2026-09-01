@@ -32,7 +32,7 @@ Apache-2.0. The full license text is bundled in this installed skill directory.
 
 ## Runtime and permissions
 
-Requires a checkout of SkillHub, Python 3.9 or newer, Git, network access for
+Requires a checkout of SkillHub, Python 3.11 or newer, Git, network access for
 remote synchronization, and repository write access only when the user asks to
 apply or submit changes. Validation and synchronization preview are read-only.
 

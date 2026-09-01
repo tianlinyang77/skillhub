@@ -11,7 +11,7 @@ Required before publication:
   provided;
 - add `LICENSE` and `NOTICE` when the installed directory would otherwise lose
   required attribution (`LICENSE` is mandatory for publication);
-- delete this scaffold README from the final skill package.
+- delete this scaffold README instead of shipping it in the final skill package.
 
 Keep only the six Agent Skills frontmatter fields. Optional catalog-specific
 values belong in `metadata` as strings or in validated repository sidecars;

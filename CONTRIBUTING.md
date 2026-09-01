@@ -60,6 +60,10 @@ and full-depth discovery.
 ## Skill requirements
 
 - Folder and frontmatter names use lowercase hyphen-case and match exactly.
+- Use a globally descriptive name. Prefer `<product>-<action>` for
+  product-specific workflows, while cross-product skills may use another clear
+  capability name. Bare generic names such as `add-model`, `profile`,
+  `benchmark`, `test`, `build`, and `deploy` are rejected.
 - YAML frontmatter uses only Agent Skills fields: required `name` and
   `description`, plus optional `license`, `compatibility`, `metadata`, and
   experimental `allowed-tools`. Put vendor fields such as version, author and
@@ -67,6 +71,7 @@ and full-depth discovery.
 - The description explains capability, trigger conditions, and the nearest important exclusion.
 - Keep `SKILL.md` at or below 500 lines; move details into `references/`.
 - Keep the published catalog flat. Do not place another `SKILL.md` inside a skill.
+- Remove scaffold placeholders and every `.template` file before publication.
 - Bundle every required dependency inside the skill directory. Do not depend on sibling skills or source-repository files that an installer will not copy.
 - Add a schema-versioned `skill-card.md` with machine-readable owner, source,
   license and lifecycle frontmatter plus the required human-readable sections.

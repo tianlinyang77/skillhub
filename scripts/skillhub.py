@@ -36,6 +36,26 @@ ALLOWED_COMPONENT_FIELDS = frozenset((
 ALLOWED_COMPONENT_SKILL_FIELDS = frozenset((
     "path", "catalog_dir", "category",
 ))
+ALLOWED_CATEGORIES = frozenset((
+    "Governance and Compliance",
+    "Developer Tools",
+    "HCU Platform",
+    "Operator Development",
+    "Performance and Profiling",
+    "Training",
+    "Inference",
+    "Distributed Systems",
+    "CI and Release",
+    "Documentation",
+))
+FORBIDDEN_GENERIC_CATALOG_DIRS = frozenset((
+    "add-model",
+    "benchmark",
+    "build",
+    "deploy",
+    "profile",
+    "test",
+))
 ALLOWED_EVAL_FIELDS = frozenset((
     "id",
     "prompt",
@@ -91,6 +111,11 @@ BEHAVIOR_ASSERTION_FIELDS = (
     "unexpected_behavior",
     "logs_contain",
     "files_exist",
+)
+SKILL_TEMPLATE_PLACEHOLDERS = (
+    "replace-with-lowercase-hyphen-name",
+    "hygon-ai/replace-me",
+    "replace-with-skill-name",
 )
 
 
@@ -214,9 +239,15 @@ def load_components(root=ROOT):
             catalog_dir = skill["catalog_dir"]
             if not isinstance(catalog_dir, str) or len(catalog_dir) > 64 or not SKILL_NAME_RE.match(catalog_dir):
                 raise CatalogError("{}.catalog_dir must be lowercase hyphen-case and at most 64 characters".format(label))
+            if catalog_dir in FORBIDDEN_GENERIC_CATALOG_DIRS:
+                raise CatalogError(
+                    "{}.catalog_dir '{}' is too generic; use a globally descriptive name".format(
+                        label, catalog_dir))
             category = skill["category"]
-            if not isinstance(category, str) or not category.strip():
-                raise CatalogError("{}.category must be a non-empty string".format(label))
+            if not isinstance(category, str) or category not in ALLOWED_CATEGORIES:
+                raise CatalogError(
+                    "{}.category must be one of: {}".format(
+                        label, ", ".join(sorted(ALLOWED_CATEGORIES))))
             if catalog_dir in seen_catalog_dirs:
                 raise CatalogError("duplicate catalog_dir '{}': {} and {}".format(
                     catalog_dir, seen_catalog_dirs[catalog_dir], path.relative_to(root)))
@@ -326,6 +357,15 @@ def validate_skill_frontmatter(frontmatter, expected_name, rel, source_name="SKI
     return errors
 
 
+def validate_skill_placeholders(text, rel, source_name="SKILL.md"):
+    """Reject scaffold-only placeholders without policing ordinary prose."""
+    lowered = text.lower()
+    if "replace with" in lowered or any(
+            placeholder in lowered for placeholder in SKILL_TEMPLATE_PLACEHOLDERS):
+        return ["{}/{}: unresolved scaffold placeholder".format(rel, source_name)]
+    return []
+
+
 def validate_skill_tree(skill_dir, root=ROOT):
     """Reject non-portable or unexpectedly large published packages."""
     errors = []
@@ -355,6 +395,9 @@ def validate_skill_tree(skill_dir, root=ROOT):
                 path.relative_to(root)))
         if path.is_file():
             files.append(path)
+            if path.suffix == ".template":
+                errors.append("{}: template scaffold file is not publishable".format(
+                    path.relative_to(root)))
             if path.name in FORBIDDEN_PACKAGE_FILES or path.suffix == ".pyc":
                 errors.append("{}: generated or environment file is not publishable".format(
                     path.relative_to(root)))
@@ -462,13 +505,15 @@ def validate_staging(root=ROOT):
             errors.append("{}: SKILL.md.candidate is required".format(rel))
             continue
         try:
-            frontmatter, _, _, line_count = parse_frontmatter_document(
+            frontmatter, _, text, line_count = parse_frontmatter_document(
                 candidate_file, root)
         except CatalogError as exc:
             errors.append(str(exc))
             continue
         errors.extend(validate_skill_frontmatter(
             frontmatter, candidate_dir.name, rel, "SKILL.md.candidate"))
+        errors.extend(validate_skill_placeholders(
+            text, rel, "SKILL.md.candidate"))
         if line_count > MAX_SKILL_LINES:
             errors.append("{}/SKILL.md.candidate: {} lines; keep it at or below {}".format(
                 rel, line_count, MAX_SKILL_LINES))
@@ -790,6 +835,7 @@ def validate_catalog(root=ROOT):
         frontmatter = record["metadata"]
         errors.extend(validate_skill_frontmatter(
             frontmatter, record["spec"]["catalog_dir"], rel))
+        errors.extend(validate_skill_placeholders(record["text"], rel))
         if record["line_count"] > MAX_SKILL_LINES:
             errors.append("{}/SKILL.md: {} lines; keep it at or below {}".format(
                 rel, record["line_count"], MAX_SKILL_LINES))

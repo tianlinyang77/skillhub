@@ -16,6 +16,11 @@ def main():
         print("ERROR: {}".format(error))
     if errors:
         print("Validation failed with {} error(s).".format(len(errors)))
+        print(
+            "HINT: These errors often come from unrenamed .template files or "
+            "unresolved scaffold placeholders. See "
+            "CONTRIBUTING.md#skill-requirements."
+        )
         return 1
     print("Validated {} skill(s) across {} component(s).".format(len(records), len(components)))
     return 0

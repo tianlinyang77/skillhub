@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from scripts.skillhub import (
+    ALLOWED_CATEGORIES,
     CatalogError,
     load_components,
     validate_admission_exceptions,
@@ -16,6 +17,7 @@ from scripts.skillhub import (
     validate_markdown_links,
     validate_skill_card,
     validate_skill_frontmatter,
+    validate_skill_placeholders,
     validate_skill_tree,
     validate_staging,
 )
@@ -34,7 +36,7 @@ description: Example component.
 skills:
   - path: skills/example
     catalog_dir: example
-    category: Testing
+    category: Developer Tools
 """
 
 
@@ -53,6 +55,20 @@ class ComponentOwnerTests(unittest.TestCase):
         components = self.load_repo("HYGON-AI/example")
         self.assertEqual(components[0]["repo"], "HYGON-AI/example")
 
+    def test_category_allowlist_is_stable(self):
+        self.assertEqual(ALLOWED_CATEGORIES, frozenset({
+            "Governance and Compliance",
+            "Developer Tools",
+            "HCU Platform",
+            "Operator Development",
+            "Performance and Profiling",
+            "Training",
+            "Inference",
+            "Distributed Systems",
+            "CI and Release",
+            "Documentation",
+        }))
+
     def test_rejects_third_party_repository(self):
         with self.assertRaisesRegex(CatalogError, "repo must be owned by HYGON-AI"):
             self.load_repo("third-party/example")
@@ -69,6 +85,34 @@ class ComponentOwnerTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(CatalogError, "safe repository-relative"):
+                load_components(root)
+
+    def test_rejects_unknown_category(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            component_dir = root / "components.d"
+            component_dir.mkdir()
+            (component_dir / "example.yml").write_text(
+                COMPONENT.format(repo="HYGON-AI/example").replace(
+                    "category: Developer Tools", "category: Made Up Category"
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(CatalogError, "category must be one of"):
+                load_components(root)
+
+    def test_rejects_bare_generic_catalog_name(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            component_dir = root / "components.d"
+            component_dir.mkdir()
+            (component_dir / "example.yml").write_text(
+                COMPONENT.format(repo="HYGON-AI/example").replace(
+                    "catalog_dir: example", "catalog_dir: profile"
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(CatalogError, "is too generic"):
                 load_components(root)
 
 
@@ -161,6 +205,35 @@ class StandaloneSkillTests(unittest.TestCase):
             errors = validate_skill_tree(skill_dir, root)
             self.assertTrue(any("not publishable" in error for error in errors))
 
+    def test_rejects_template_scaffold_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skill_dir = root / "skills" / "example"
+            template_file = skill_dir / "agents" / "openai.yaml.template"
+            template_file.parent.mkdir(parents=True)
+            template_file.write_text("interface: {}\n", encoding="utf-8")
+            errors = validate_skill_tree(skill_dir, root)
+            self.assertTrue(any(
+                "template scaffold file is not publishable" in error
+                for error in errors
+            ))
+
+    def test_rejects_scaffold_placeholder_but_allows_todo_and_tbd_prose(self):
+        rel = Path("skills/example")
+        self.assertEqual(
+            validate_skill_placeholders(
+                "# Review\nCheck whether source files contain TODO or TBD markers.",
+                rel,
+            ),
+            [],
+        )
+        errors = validate_skill_placeholders("# Replace with skill title", rel)
+        self.assertTrue(any("unresolved scaffold placeholder" in error for error in errors))
+        errors = validate_skill_placeholders(
+            "name: replace-with-lowercase-hyphen-name", rel
+        )
+        self.assertTrue(any("unresolved scaffold placeholder" in error for error in errors))
+
 
 class StagingSkillTests(unittest.TestCase):
     def write_candidate(self, root, directory="example", name="example"):
@@ -216,6 +289,23 @@ class StagingSkillTests(unittest.TestCase):
             errors = validate_staging(root)
             self.assertTrue(any(
                 "name must equal catalog_dir 'example'" in error
+                for error in errors
+            ))
+
+    def test_rejects_candidate_scaffold_placeholder(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            candidate_dir = self.write_candidate(root)
+            candidate_file = candidate_dir / "SKILL.md.candidate"
+            candidate_file.write_text(
+                candidate_file.read_text(encoding="utf-8").replace(
+                    "# Example", "# Replace with skill title"
+                ),
+                encoding="utf-8",
+            )
+            errors = validate_staging(root)
+            self.assertTrue(any(
+                "unresolved scaffold placeholder" in error
                 for error in errors
             ))
 
