@@ -17,6 +17,13 @@ here. Generated skill synchronization updates may be grouped by release.
 
 ### Changed
 
+- Catalog categories now use an enforced allowlist, primary-output
+  classification rules and explicit inclusion/exclusion boundaries; accuracy
+  and correctness debugging have a dedicated category.
+- Ambiguous bare catalog names, residual `.template` files and unresolved
+  scaffold placeholders are rejected before publication.
+- Pull-request validation runs on Python 3.11 and 3.12, while DCO and scheduled
+  synchronization use the declared minimum Python 3.11 runtime.
 - Published skills require a skill card and a minimum routing/behavior dataset.
 - Nested `SKILL.md` dependencies are rejected in the flat catalog.
 - Relative Markdown links are validated recursively across each skill package.
@@ -35,3 +42,11 @@ here. Generated skill synchronization updates may be grouped by release.
   `staging/` are rejected and full-depth CLI discovery is verified in CI.
 - CI now pins external Actions and CLI versions, runs the pinned Agent Skills
   reference validator, verifies CLI discovery, and enforces DCO sign-offs.
+
+### Deferred
+
+- Restricting `local: true` components to the official catalog repository is
+  deferred until `HYGON-AI/skillhub` exists and this repository is migrated.
+- The remote clone, sparse-checkout, digest and lock path remains to be proven
+  with the first admitted product-owned skill; local-only validation does not
+  establish that evidence.

@@ -5,4 +5,4 @@ description: Replace with one sentence describing the product and its skills.
 skills:
   - path: skills/replace-with-skill-name
     catalog_dir: replace-with-skill-name
-    category: Replace with an existing category when possible
+    category: Replace with one exact category from docs/governance/taxonomy.md

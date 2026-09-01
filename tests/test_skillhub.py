@@ -62,12 +62,30 @@ class ComponentOwnerTests(unittest.TestCase):
             "HCU Platform",
             "Operator Development",
             "Performance and Profiling",
+            "Accuracy and Debugging",
             "Training",
             "Inference",
             "Distributed Systems",
             "CI and Release",
             "Documentation",
         }))
+
+    def test_accepts_accuracy_and_debugging_category(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            component_dir = root / "components.d"
+            component_dir.mkdir()
+            (component_dir / "example.yml").write_text(
+                COMPONENT.format(repo="HYGON-AI/example").replace(
+                    "category: Developer Tools", "category: Accuracy and Debugging"
+                ),
+                encoding="utf-8",
+            )
+            components = load_components(root)
+            self.assertEqual(
+                components[0]["skills"][0]["category"],
+                "Accuracy and Debugging",
+            )
 
     def test_rejects_third_party_repository(self):
         with self.assertRaisesRegex(CatalogError, "repo must be owned by HYGON-AI"):

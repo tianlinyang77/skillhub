@@ -42,6 +42,7 @@ ALLOWED_CATEGORIES = frozenset((
     "HCU Platform",
     "Operator Development",
     "Performance and Profiling",
+    "Accuracy and Debugging",
     "Training",
     "Inference",
     "Distributed Systems",
