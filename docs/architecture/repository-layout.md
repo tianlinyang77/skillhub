@@ -17,6 +17,7 @@ supporting material belongs in `references/` with ordinary Markdown names.
 ```text
 skills/
 ├── .github/                  # Pull-request templates, ownership and CI
+├── assets/                   # Repository-level README media; never skill content
 ├── components.d/             # Product source registry; one file per product
 ├── docs/                     # Architecture, governance and release contracts
 ├── scripts/                  # Validation, synchronization and generation tools
@@ -38,6 +39,7 @@ skills/
 | `skills/<name>/` for remote components | Registered product repository | No; synchronize it |
 | `skills/<name>/` for `local: true` components | This repository | Yes, through PR |
 | `staging/` | This repository | Yes; only `SKILL.md.candidate`, never `SKILL.md` |
+| `assets/` | This repository | Yes, through PR; regenerate media from its build script |
 | `catalog.json`, `skills.sh.json` | Generator output | No |
 | `.skillhub-lock.json` | Synchronization output | No |
 
