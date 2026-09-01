@@ -49,5 +49,5 @@ context to make the catalog identity durable if the product or repository is
 renamed.
 
 Do not create `skills/<category>/<skill>/`. Nested category directories make
-CLI discovery, global name uniqueness, synchronization and plugin selection
+CLI discovery, global name uniqueness, synchronization and catalog generation
 ambiguous.

@@ -20,13 +20,8 @@ full-depth discovery cannot publish a candidate.
 
 ## Generated content
 
-`catalog.json`, `skills.sh.json`, README catalog sections, remote mirrors and
-plugin bundles are generated artifacts. Regenerate them from reviewed sources;
-do not repair drift by hand.
-
-## Distribution layers
+`catalog.json`, `skills.sh.json`, README catalog sections and remote mirrors
+are generated artifacts. Regenerate them from reviewed sources; do not repair
+drift by hand.
 
 The repository-level catalog supports direct skill discovery and installation.
-Plugin bundles are a separate distribution layer for grouped skills and tool
-dependencies. A plugin manifest must select an explicit published subset; it
-must not silently include every directory under `skills/`.

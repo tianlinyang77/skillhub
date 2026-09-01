@@ -59,5 +59,5 @@ An exception is not a waiver and must never cause a failing skill to appear in
 
 Remove a published skill when its owner disappears, its source is deleted, its
 license changes incompatibly, or its behavior can no longer be validated.
-Record user-visible removals in release notes before deleting generated plugin
+Record user-visible removals in release notes before deleting published catalog
 entries. Do not retain an unmaintained skill merely to preserve catalog count.

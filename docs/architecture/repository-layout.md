@@ -19,10 +19,6 @@ skills/
 ├── .github/                  # Pull-request templates, ownership and CI
 ├── components.d/             # Product source registry; one file per product
 ├── docs/                     # Architecture, governance and release contracts
-├── eval/                     # Shared evaluation contract and future runner
-├── plugins.d/                # Reviewed plugin source definitions
-├── plugins/                  # Generated installable plugin bundles
-├── schemas/                  # Machine-readable repository contracts
 ├── scripts/                  # Validation, synchronization and generation tools
 ├── staging/                  # Catalog-owned SKILL.md.candidate files
 ├── templates/                # Non-discoverable contribution scaffolds
@@ -44,7 +40,6 @@ skills/
 | `staging/` | This repository | Yes; only `SKILL.md.candidate`, never `SKILL.md` |
 | `catalog.json`, `skills.sh.json` | Generator output | No |
 | `.skillhub-lock.json` | Synchronization output | No |
-| `plugins/` | Plugin build output | No, except its directory documentation |
 
 ## Per-skill layout
 
@@ -89,7 +84,7 @@ product source or catalog prototype
     synchronized published skill
               |
               v
- catalog metadata and plugin release
+        catalog metadata
 ```
 
 Product-owned candidates remain in their product repositories until admitted.

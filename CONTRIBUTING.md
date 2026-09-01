@@ -9,7 +9,7 @@ Hygon SkillHub is a publication catalog. Product teams own their source skills s
   a real `SKILL.md` is forbidden anywhere below `staging/` so deep discovery
   cannot expose candidates.
 - Only direct children of `skills/` are published catalog identities.
-- Generated mirrors, catalog files, lock files and plugin bundles are never repaired by hand.
+- Generated mirrors, catalog files and lock files are never repaired by hand.
 
 Start from [`templates/skill/`](templates/skill) and read the
 [repository layout](docs/architecture/repository-layout.md),

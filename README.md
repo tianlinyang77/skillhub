@@ -20,7 +20,7 @@ npx skills add HYGON-AI/skillhub --skill skillhub-contributor --agent codex --ye
 ## Repository structure
 
 The repository separates candidate content, product sources, published skills,
-evaluation evidence, generated metadata, and plugin distribution:
+evaluation evidence, and generated metadata:
 
 | Path | Purpose |
 | --- | --- |
@@ -28,10 +28,7 @@ evaluation evidence, generated metadata, and plugin distribution:
 | [`staging/`](staging) | Catalog-owned `SKILL.md.candidate` files that cannot be discovered |
 | [`components.d/`](components.d) | One reviewed source registration per HYGON-AI product |
 | [`templates/`](templates) | Non-discoverable contribution scaffolds |
-| [`eval/`](eval) | Shared evaluation contract and future runners |
 | [`docs/`](docs) | Architecture, admission, evaluation and release policy |
-| [`plugins.d/`](plugins.d) | Reviewed plugin source definitions |
-| [`plugins/`](plugins) | Generated installable plugin bundles |
 
 Every direct child of `skills/` is one catalog identity. Published skills must
 not contain nested `SKILL.md` files or depend on sibling skills. See the
