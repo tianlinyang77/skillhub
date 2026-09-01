@@ -11,7 +11,8 @@ Hygon SkillHub is a publication catalog. Product teams own their source skills s
 - Only direct children of `skills/` are published catalog identities.
 - Generated mirrors, catalog files and lock files are never repaired by hand.
 
-Start from [`templates/skill/`](templates/skill) and read the
+Use [`scripts/new_skill.py`](scripts/new_skill.py) for the mechanical scaffold
+or fall back to [`templates/skill/`](templates/skill). Read the
 [repository layout](docs/architecture/repository-layout.md),
 [admission policy](docs/governance/admission.md), and
 [evaluation contract](docs/evaluation/README.md). Reuse the stable categories
@@ -27,9 +28,47 @@ SkillHub publishes skills whose source-of-truth repository is owned by the [`HYG
 
 Do not register or mirror an unchanged third-party or upstream skill as a HYGON-AI skill. Link to the canonical upstream skill instead, then request catalog admission after the product team has added and tested the HCU-specific workflow. Preserve all applicable third-party copyright, license, and NOTICE material in an adapted skill.
 
+## Generate a product-owned scaffold
+
+Run the generator from a SkillHub checkout and point it at the local product
+repository. It creates the final filenames, fills identity fields, copies the
+product license and any root NOTICE, and creates or appends the component
+registration without reformatting an existing file:
+
+```bash
+python3 scripts/new_skill.py quality-gate-audit \
+  --source-root ../quality-gate \
+  --repo HYGON-AI/quality-gate \
+  --ref main \
+  --owner "Quality Gate Team" \
+  --description "Audit a repository when publication readiness must be verified." \
+  --license Apache-2.0 \
+  --category "Governance and Compliance" \
+  --product-name "Quality Gate" \
+  --product-description "Repository publication and compliance gates." \
+  --with-openai \
+  --with-references
+```
+
+Use `--dry-run` to review destinations first. The generator refuses to
+overwrite an existing skill, rejects unapproved repositories, categories and
+generic names, and requires a non-empty source `LICENSE` unless
+`--license-file` names another reviewed license text. It copies a root
+`NOTICE`, `NOTICE.txt` or `NOTICE.md` automatically; use `--notice-file` for a
+different required notice. The script does not infer legal terms: reviewers
+must confirm that `--license` matches the copied text and that all NOTICE
+obligations are satisfied.
+
+The generated Skill Card remains `staging` and its author-owned sections and
+Eval prompts contain `TODO` markers. Replace them with real workflow,
+permission and evaluation evidence, then change the lifecycle to `published`.
+The command makes local changes in both repositories for convenience, but the
+Git history remains two-stage: merge the product source first, then synchronize
+and submit the SkillHub component change.
+
 ## Add a product-owned skill
 
-1. Add a portable `skills/<skill-name>/SKILL.md` directory to the product repository.
+1. Generate or add a portable `skills/<skill-name>/SKILL.md` directory to the product repository.
 2. Add `skill-card.md`, `evals/evals.json`, required license and NOTICE material, and any self-contained resources.
 3. Confirm the owning team approved public release and the source license permits redistribution.
 4. Add `components.d/<product>.yml` here. Use one file per product team; do not edit another team's registry file.

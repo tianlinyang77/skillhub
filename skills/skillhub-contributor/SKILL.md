@@ -5,7 +5,7 @@ license: Apache-2.0
 compatibility: Requires Python 3.11+, Git, and network access when resolving or synchronizing remote HYGON-AI repositories.
 metadata:
   author: HYGON-AI
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Contribute to Hygon SkillHub
@@ -23,9 +23,9 @@ product repository or inside this installed skill.
 
 1. Confirm the owning team, source repository, license, and intended user prompts.
 2. Create the skill at `skills/<skill-name>/` in the source repository. Use lowercase letters, digits, and hyphens for the directory and frontmatter `name`.
-3. Start from the SkillHub `templates/skill/` scaffold. Add `skill-card.md`, `evals/evals.json`, and required license or NOTICE material.
+3. Prefer `python3 scripts/new_skill.py --help` from the SkillHub checkout. It creates final filenames, fills deterministic identity fields, copies the source license and NOTICE, and prepares the component registration. Use `templates/skill/` only as the manual fallback.
 4. Keep `SKILL.md` focused on procedures the agent cannot infer. Put detailed knowledge in `references/`, deterministic helpers in `scripts/`, and output material in `assets/`. Do not nest another `SKILL.md`.
-5. Add or update one `components.d/<product>.yml` file in SkillHub. Map every source `path` to a globally unique `catalog_dir` and choose a category.
+5. Review the generated `components.d/<product>.yml` change, or add it manually. Map every source `path` to a globally unique `catalog_dir` and choose a category.
 6. Run `python3 scripts/validate_skills.py`, `python3 scripts/validate_agent_skills_spec.py`, and `python3 scripts/generate_catalog.py --check` from the SkillHub root.
 7. For a remote product source, preview synchronization with `python3 scripts/sync_sources.py --check --component <component-file-stem>`. The check must prove the ref, resolved commit, source digest, lock entry, and published tree agree. Apply it only after reviewing the reported destinations.
 8. Verify the pinned `npx skills@1.5.23 add . --list` and `--full-depth`

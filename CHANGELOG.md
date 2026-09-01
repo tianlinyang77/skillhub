@@ -14,6 +14,8 @@ here. Generated skill synchronization updates may be grouped by release.
 - Production repository-settings baseline for protected reviews, required
   checks, DCO, private vulnerability reporting, and synchronization authority.
 - Non-discoverable contribution templates.
+- Product-owned Skill generator for deterministic naming, placeholder
+  replacement, LICENSE and NOTICE copying, and component registration.
 
 ### Changed
 

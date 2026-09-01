@@ -1,5 +1,28 @@
 # Skill onboarding reference
 
+## Scaffold command
+
+From the SkillHub checkout, generate the product-owned directory and component
+registration together:
+
+```bash
+python3 scripts/new_skill.py example-skill \
+  --source-root ../product-repository \
+  --repo HYGON-AI/product-repository \
+  --owner "Product Team" \
+  --description "Describe the capability and when it should trigger." \
+  --license Apache-2.0 \
+  --category Inference \
+  --with-references
+```
+
+Review with `--dry-run` when paths or repository checkouts are uncertain. The
+generated card deliberately remains `staging`; complete every `TODO`, replace
+the Eval prompts with real routing boundaries, and set `published` only after
+the evidence is ready. Commit and merge the product repository first. The
+component change remains local in SkillHub until the source ref contains the
+reviewed Skill.
+
 ## Component schema
 
 Create `components.d/<slug>.yml`:
