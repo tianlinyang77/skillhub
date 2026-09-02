@@ -5,18 +5,19 @@
     {
       "id": "create-local-skill",
       "skill_should_trigger": true,
-      "prompt": "Add a new portable skill directly to HYGON-AI SkillHub and tell me which files and checks it needs.",
+      "prompt": "I want to add a new skill to HYGON-AI SkillHub itself. It has no product repository. Walk me through creating and registering it.",
       "expected_behavior": [
-        "Use the local SkillHub path by default and prepare one repository pull request.",
-        "Require the skill package, local component registration, catalog generation, structural validation, and CLI discovery before publication."
+        "Treat the local mode as the default and scaffold the skill under skills/ in the catalog repository.",
+        "Register it with local: true, omitting repo or setting it to HYGON-AI/skillhub, with the source path equal to skills/<catalog_dir>.",
+        "Land content, registration and regenerated catalog files in one pull request without a lock entry or content digest."
       ]
     },
     {
       "id": "register-product-skill",
       "skill_should_trigger": true,
-      "prompt": "A product team explicitly maintains a portable skill in its HYGON-AI repository. Register the opt-in remote component in SkillHub and tell me which checks must pass.",
+      "prompt": "A product team explicitly maintains a portable skill in its own HYGON-AI repository. Register that remote source in SkillHub and tell me which checks must pass.",
       "expected_behavior": [
-        "Confirm that the product team owns the source skill, then register a remote component without making it the default contribution path.",
+        "Keep the product repository as the source of truth and add a components.d registration in SkillHub.",
         "Require source synchronization, catalog generation, structural validation, and CLI discovery before publication."
       ]
     },
@@ -28,7 +29,7 @@
     {
       "id": "diagnose-catalog-sync",
       "skill_should_trigger": true,
-      "prompt": "A product team explicitly maintains its Skill in another HYGON-AI repository, and the SkillHub mirror check reports drift. Diagnose the optional remote workflow."
+      "prompt": "The SkillHub synchronization check says a mirrored directory differs from its remote product source. Diagnose the catalog workflow."
     },
     {
       "id": "integrate-quality-gate-workflow",

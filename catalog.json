@@ -4,7 +4,7 @@
   "skills": [
     {
       "name": "skillhub-contributor",
-      "description": "Create, review, and onboard portable Agent Skills into HYGON-AI SkillHub. Use when adding or updating a SkillHub package, preparing its metadata and evaluations, or diagnosing catalog validation; use remote synchronization only when a product team explicitly owns the source skill in another HYGON-AI repository.",
+      "description": "Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures.",
       "category": "Developer Tools",
       "product": "SkillHub",
       "source": {
