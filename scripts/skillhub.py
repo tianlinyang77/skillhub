@@ -14,6 +14,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 OFFICIAL_GITHUB_OWNER = "HYGON-AI"
+CATALOG_REPO = OFFICIAL_GITHUB_OWNER + "/skillhub"
+CATALOG_REF = "main"
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 EVAL_ID_RE = SKILL_NAME_RE
 REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
@@ -167,6 +169,12 @@ def safe_relative_path(value, label):
 
 
 def load_components(root=ROOT):
+    """Load local-first component registrations.
+
+    Local components may omit ``repo``; it is normalized to the catalog
+    repository and then validated. Remote components remain available as an
+    explicit opt-in for product teams that own their source skills.
+    """
     component_dir = root / "components.d"
     paths = sorted(list(component_dir.glob("*.yml")) + list(component_dir.glob("*.yaml")))
     if not paths:
@@ -175,9 +183,9 @@ def load_components(root=ROOT):
     components = []
     seen_catalog_dirs = {}
     seen_component_names = set()
-    seen_repositories = set()
+    seen_remote_repositories = set()
     for path in paths:
-        if not SKILL_NAME_RE.match(path.stem):
+        if not SKILL_NAME_RE.fullmatch(path.stem):
             raise CatalogError("{}: component filename must use lowercase hyphen-case".format(
                 path.relative_to(root)))
         data = load_yaml(path, root)
@@ -185,30 +193,42 @@ def load_components(root=ROOT):
         if extra_fields:
             raise CatalogError("{}: unsupported fields: {}".format(
                 path.relative_to(root), ", ".join(extra_fields)))
-        for field in ("name", "repo", "description", "skills"):
+        for field in ("name", "description", "skills"):
             if field not in data:
-                raise CatalogError("{}: missing required field '{}'".format(path.relative_to(root), field))
+                raise CatalogError("{}: missing required field '{}'".format(
+                    path.relative_to(root), field))
         if not isinstance(data["name"], str) or not data["name"].strip():
             raise CatalogError("{}: name must be a non-empty string".format(path.relative_to(root)))
         if data["name"] in seen_component_names:
             raise CatalogError("{}: duplicate component name '{}'".format(
                 path.relative_to(root), data["name"]))
         seen_component_names.add(data["name"])
-        repo = str(data["repo"])
-        if not REPO_RE.match(repo):
-            raise CatalogError("{}: repo must use owner/name form".format(path.relative_to(root)))
-        owner, _ = repo.split("/", 1)
-        if owner != OFFICIAL_GITHUB_OWNER:
-            raise CatalogError("{}: repo must be owned by {}".format(
-                path.relative_to(root), OFFICIAL_GITHUB_OWNER))
-        if repo in seen_repositories:
-            raise CatalogError("{}: repository '{}' is registered more than once".format(
-                path.relative_to(root), repo))
-        seen_repositories.add(repo)
-        ref = data.get("ref", "main")
+        if "local" in data and not isinstance(data["local"], bool):
+            raise CatalogError("{}: local must be true or false".format(path.relative_to(root)))
+        local = data.get("local", False)
+        repo = data.get("repo")
+        if local:
+            repo = repo or CATALOG_REPO
+            if repo != CATALOG_REPO:
+                raise CatalogError("{}: local repo must equal '{}'".format(
+                    path.relative_to(root), CATALOG_REPO))
+        else:
+            if repo is None:
+                raise CatalogError("{}: remote component requires repo".format(path.relative_to(root)))
+            if not isinstance(repo, str) or not REPO_RE.fullmatch(repo):
+                raise CatalogError("{}: repo must use owner/name form".format(path.relative_to(root)))
+            owner, _ = repo.split("/", 1)
+            if owner != OFFICIAL_GITHUB_OWNER:
+                raise CatalogError("{}: repo must be owned by {}".format(
+                    path.relative_to(root), OFFICIAL_GITHUB_OWNER))
+            if repo in seen_remote_repositories:
+                raise CatalogError("{}: remote repository '{}' is registered more than once".format(
+                    path.relative_to(root), repo))
+            seen_remote_repositories.add(repo)
+        ref = data.get("ref", CATALOG_REF)
         if (
                 not isinstance(ref, str)
-                or not REF_RE.match(ref)
+                or not REF_RE.fullmatch(ref)
                 or ".." in ref
                 or ref.startswith("-")
         ):
@@ -217,13 +237,7 @@ def load_components(root=ROOT):
             raise CatalogError("{}: description must be a non-empty string".format(path.relative_to(root)))
         if not isinstance(data["skills"], list) or not data["skills"]:
             raise CatalogError("{}: skills must be a non-empty list".format(path.relative_to(root)))
-        if "local" in data and not isinstance(data["local"], bool):
-            raise CatalogError("{}: local must be true or false".format(path.relative_to(root)))
 
-        normalized = dict(data)
-        normalized["ref"] = ref
-        normalized["local"] = data.get("local", False)
-        normalized["file"] = path
         normalized_skills = []
         for index, skill in enumerate(data["skills"]):
             label = "{}: skills[{}]".format(path.relative_to(root), index)
@@ -238,25 +252,39 @@ def load_components(root=ROOT):
                     raise CatalogError("{}: missing '{}'".format(label, field))
             source_path = safe_relative_path(skill["path"], "{}.path".format(label))
             catalog_dir = skill["catalog_dir"]
-            if not isinstance(catalog_dir, str) or len(catalog_dir) > 64 or not SKILL_NAME_RE.match(catalog_dir):
+            if not isinstance(catalog_dir, str) or len(catalog_dir) > 64 or not SKILL_NAME_RE.fullmatch(catalog_dir):
                 raise CatalogError("{}.catalog_dir must be lowercase hyphen-case and at most 64 characters".format(label))
             if catalog_dir in FORBIDDEN_GENERIC_CATALOG_DIRS:
                 raise CatalogError(
                     "{}.catalog_dir '{}' is too generic; use a globally descriptive name".format(
                         label, catalog_dir))
+            if local:
+                expected_path = "skills/{}".format(catalog_dir)
+                if source_path != expected_path:
+                    raise CatalogError("{}.path must equal '{}' for a local skill".format(
+                        label, expected_path))
             category = skill["category"]
             if not isinstance(category, str) or category not in ALLOWED_CATEGORIES:
-                raise CatalogError(
-                    "{}.category must be one of: {}".format(
-                        label, ", ".join(sorted(ALLOWED_CATEGORIES))))
+                raise CatalogError("{}.category must be one of: {}".format(
+                    label, ", ".join(sorted(ALLOWED_CATEGORIES))))
             if catalog_dir in seen_catalog_dirs:
                 raise CatalogError("duplicate catalog_dir '{}': {} and {}".format(
                     catalog_dir, seen_catalog_dirs[catalog_dir], path.relative_to(root)))
             seen_catalog_dirs[catalog_dir] = path.relative_to(root)
-            item = dict(skill)
-            item["path"] = source_path
-            normalized_skills.append(item)
-        normalized["skills"] = normalized_skills
+            normalized_skills.append({
+                "path": source_path,
+                "catalog_dir": catalog_dir,
+                "category": category,
+            })
+
+        normalized = dict(data)
+        normalized.update({
+            "repo": repo,
+            "ref": ref,
+            "local": local,
+            "file": path,
+            "skills": normalized_skills,
+        })
         components.append(normalized)
     return components
 
@@ -529,17 +557,17 @@ def registered_skills(components, root=ROOT):
             skill_dir = root / "skills" / spec["catalog_dir"]
             skill_file = skill_dir / "SKILL.md"
             if not skill_file.is_file():
-                raise CatalogError("{}: registered skill is missing SKILL.md".format(skill_dir.relative_to(root)))
+                raise CatalogError("{}: registered skill is missing SKILL.md".format(
+                    skill_dir.relative_to(root)))
             metadata, text, line_count = parse_skill_frontmatter(skill_file, root)
-            record = {
+            records.append({
                 "component": component,
                 "spec": spec,
                 "dir": skill_dir,
                 "metadata": metadata,
                 "text": text,
                 "line_count": line_count,
-            }
-            records.append(record)
+            })
     return records
 
 
@@ -610,14 +638,14 @@ def validate_lock(components, records, root=ROOT):
                 errors.append(".skillhub-lock.json: skill '{}'.{} must equal '{}'".format(
                     name, field, expected_value))
         commit = entry.get("commit")
-        if not isinstance(commit, str) or not COMMIT_RE.match(commit):
+        if not isinstance(commit, str) or not COMMIT_RE.fullmatch(commit):
             errors.append(".skillhub-lock.json: skill '{}'.commit must be a 40-character lowercase Git commit".format(name))
-        digest = entry.get("content_digest")
-        if not isinstance(digest, str) or not DIGEST_RE.match(digest):
+        content_digest = entry.get("content_digest")
+        if not isinstance(content_digest, str) or not DIGEST_RE.fullmatch(content_digest):
             errors.append(".skillhub-lock.json: skill '{}'.content_digest must be a lowercase SHA-256 digest".format(name))
         else:
             record = record_by_name.get(name)
-            if record and file_tree_digest(record["dir"]) != digest:
+            if record and file_tree_digest(record["dir"]) != content_digest:
                 errors.append(".skillhub-lock.json: skill '{}'.content_digest does not match the published tree".format(name))
     return errors
 
@@ -657,7 +685,7 @@ def validate_admission_exceptions(components, root=ROOT):
             errors.append("{}: unsupported fields: {}".format(
                 label, ", ".join(extra_fields)))
         repo = exception.get("repo")
-        if not isinstance(repo, str) or not REPO_RE.match(repo) or not repo.startswith(OFFICIAL_GITHUB_OWNER + "/"):
+        if not isinstance(repo, str) or not REPO_RE.fullmatch(repo) or not repo.startswith(OFFICIAL_GITHUB_OWNER + "/"):
             errors.append("{}: repo must use HYGON-AI/name form".format(label))
         try:
             source_path = safe_relative_path(

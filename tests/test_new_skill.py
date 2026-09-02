@@ -47,6 +47,7 @@ class NewSkillTests(unittest.TestCase):
             "description": "Audit a repository when publication readiness must be verified.",
             "license_id": "Apache-2.0",
             "category": "Governance and Compliance",
+            "local": False,
             "component": "quality-gate",
             "product_name": "Quality Gate",
             "product_description": "Repository publication and compliance gates.",
@@ -304,6 +305,82 @@ class NewSkillTests(unittest.TestCase):
             self.assertEqual(config.license_file, (source_root / "LICENSE").resolve())
             self.assertEqual(config.notice_file, notice.resolve())
             self.assertEqual(config.component, "quality-gate")
+            self.assertFalse(config.local)
+
+    def test_local_mode_creates_in_skillhub_and_uses_shared_component(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            catalog_root = root / "skillhub"
+            (catalog_root / "components.d").mkdir(parents=True)
+            (catalog_root / "components.d" / "skillhub.yml").write_text(
+                "name: SkillHub\n"
+                "local: true\n"
+                "description: Directly maintained skills.\n"
+                "skills:\n"
+                "  - path: skills/existing-skill\n"
+                "    catalog_dir: existing-skill\n"
+                "    category: Developer Tools\n",
+                encoding="utf-8",
+            )
+            (catalog_root / "LICENSE").write_text(
+                "Apache License\nVersion 2.0\n", encoding="utf-8"
+            )
+            args = parse_args([
+                "quality-gate-audit",
+                "--local",
+                "--catalog-root",
+                str(catalog_root),
+                "--owner",
+                "Quality Gate Team",
+                "--description",
+                "Audit repositories when release evidence is required.",
+                "--license",
+                "Apache-2.0",
+                "--category",
+                "Governance and Compliance",
+            ])
+
+            config = config_from_args(args)
+            self.create(config)
+
+            self.assertTrue(config.local)
+            self.assertEqual(config.repo, "HYGON-AI/skillhub")
+            self.assertEqual(config.component, "skillhub")
+            self.assertEqual(config.destination, catalog_root / "skills" / config.name)
+            component = yaml.safe_load(
+                (catalog_root / "components.d" / "skillhub.yml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertNotIn("repo", component)
+            self.assertEqual(component["local"], True)
+            self.assertEqual(component["skills"][-1]["catalog_dir"], config.name)
+
+    def test_omitting_repo_defaults_to_local_mode(self):
+        with tempfile.TemporaryDirectory() as temp:
+            catalog_root = Path(temp) / "skillhub"
+            (catalog_root / "components.d").mkdir(parents=True)
+            (catalog_root / "LICENSE").write_text(
+                "Apache License\nVersion 2.0\n", encoding="utf-8"
+            )
+            args = parse_args([
+                "quality-gate-audit",
+                "--catalog-root",
+                str(catalog_root),
+                "--owner",
+                "Quality Gate Team",
+                "--description",
+                "Audit repositories when release evidence is required.",
+                "--license",
+                "Apache-2.0",
+                "--category",
+                "Governance and Compliance",
+            ])
+
+            config = config_from_args(args)
+
+            self.assertTrue(config.local)
+            self.assertEqual(config.source_root, catalog_root.resolve())
 
 
 if __name__ == "__main__":

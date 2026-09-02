@@ -1,8 +1,6 @@
-name: Sync Product Skills
+name: Sync Opt-in Product Skills
 
 on:
-  schedule:
-    - cron: "17 1 * * *"
   workflow_dispatch:
 
 permissions:
@@ -10,7 +8,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: sync-product-skills
+  group: sync-opt-in-product-skills
   cancel-in-progress: true
 
 jobs:
@@ -53,5 +51,5 @@ jobs:
           git add skills catalog.json skills.sh.json README.md .skillhub-lock.json
           git commit --signoff -m "chore: sync product skills"
           git push --force origin "$branch"
-          gh pr create --base main --head "$branch" --title "chore: sync product skills" --body "Automated mirror update from registered HYGON-AI product repositories." || \
-            gh pr edit "$branch" --title "chore: sync product skills" --body "Automated mirror update from registered HYGON-AI product repositories."
+          gh pr create --base main --head "$branch" --title "chore: sync product skills" --body "Manual mirror update for explicitly registered HYGON-AI product repositories." || \
+            gh pr edit "$branch" --title "chore: sync product skills" --body "Manual mirror update for explicitly registered HYGON-AI product repositories."

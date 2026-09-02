@@ -55,6 +55,48 @@ class ComponentOwnerTests(unittest.TestCase):
         components = self.load_repo("HYGON-AI/example")
         self.assertEqual(components[0]["repo"], "HYGON-AI/example")
 
+    def test_local_component_may_omit_repo_and_is_normalized(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            component_dir = root / "components.d"
+            component_dir.mkdir()
+            (component_dir / "skillhub.yml").write_text(
+                "name: SkillHub\n"
+                "local: true\n"
+                "description: Directly maintained skills.\n"
+                "skills:\n"
+                "  - path: skills/example\n"
+                "    catalog_dir: example\n"
+                "    category: Developer Tools\n",
+                encoding="utf-8",
+            )
+
+            component = load_components(root)[0]
+
+            self.assertTrue(component["local"])
+            self.assertEqual(component["repo"], "HYGON-AI/skillhub")
+            self.assertEqual(component["ref"], "main")
+
+    def test_local_component_rejects_false_source_repo(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            component_dir = root / "components.d"
+            component_dir.mkdir()
+            (component_dir / "skillhub.yml").write_text(
+                "name: SkillHub\n"
+                "repo: HYGON-AI/not-skillhub\n"
+                "local: true\n"
+                "description: Directly maintained skills.\n"
+                "skills:\n"
+                "  - path: skills/example\n"
+                "    catalog_dir: example\n"
+                "    category: Developer Tools\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(CatalogError, "local repo must equal"):
+                load_components(root)
+
     def test_category_allowlist_is_stable(self):
         self.assertEqual(ALLOWED_CATEGORIES, frozenset({
             "Governance and Compliance",
