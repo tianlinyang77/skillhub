@@ -65,7 +65,7 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 | Product | Description | Skills |
 |---|---|---|
-| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`skillhub-contributor`](skills/skillhub-contributor) |
+| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
 
 <!-- catalog:end -->
 
@@ -73,13 +73,19 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 <!-- categories:start -->
 
-1 skill across 1 category.
+2 skills across 2 categories.
 
 ### Developer Tools
 
 | Skill | Product | Description |
 |---|---|---|
 | [`skillhub-contributor`](skills/skillhub-contributor) | SkillHub | Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures. |
+
+### Performance and Profiling
+
+| Skill | Product | Description |
+|---|---|---|
+| [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) | SkillHub | Analyze a torch.profiler Chrome/Perfetto JSON trace to attribute time across Python scopes, ATen operators, GPU kernels, runtime API overhead and memory copies. Use when diagnosing a slow PyTorch operator, custom extension, Triton kernel or submodule from a captured trace. |
 
 <!-- categories:end -->
 

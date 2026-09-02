@@ -7,3 +7,6 @@ skills:
   - path: skills/skillhub-contributor
     catalog_dir: skillhub-contributor
     category: Developer Tools
+  - path: "skills/torch-trace-operator-profiler"
+    catalog_dir: "torch-trace-operator-profiler"
+    category: "Performance and Profiling"

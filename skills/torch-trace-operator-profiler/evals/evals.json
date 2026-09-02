@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "skill": "torch-trace-operator-profiler",
+  "evaluations": [
+    {
+      "id": "attribute-slow-operator",
+      "skill_should_trigger": true,
+      "prompt": "I captured a torch.profiler trace of a training step and one custom op looks slow. Here is trace.json -- work out where the time actually goes.",
+      "expected_behavior": [
+        "Run scripts/torch_trace_scope_summary.py against the trace instead of guessing from the operator name.",
+        "Separate Python scope time, ATen/CPU time, GPU kernel time, runtime API overhead and memory copies.",
+        "Attribute GPU kernels through HIP/CUDA runtime correlation values rather than wall-clock overlap alone.",
+        "Classify the bottleneck as host/runtime, memory movement, algorithmic, compute, or fallback before proposing fixes."
+      ]
+    },
+    {
+      "id": "triton-kernel-hotspot",
+      "skill_should_trigger": true,
+      "prompt": "A Triton kernel dominates the timeline in this Perfetto trace. Map it back to the source and tell me what to change.",
+      "expected_behavior": [
+        "Trace the hot scope from Python wrapper through the extension binding to the kernel.",
+        "Rank proposals by measured impact and keep facts separate from inferences."
+      ]
+    },
+    {
+      "id": "submodule-time-breakdown",
+      "skill_should_trigger": true,
+      "prompt": "Break down this profiler JSON by model submodule so I can see which block is worth optimizing first."
+    },
+    {
+      "id": "projected-vs-measured-numbers",
+      "skill_should_trigger": true,
+      "prompt": "Summarize this trace into a before/after optimization report. I do not have the target GPU on this machine.",
+      "expected_behavior": [
+        "Derive before numbers from the trace and label after numbers as targets or estimates.",
+        "State that the current machine cannot reproduce the measurement and list the commands to rerun on the real environment."
+      ],
+      "unexpected_behavior": [
+        "Presents projected after numbers as measured results."
+      ]
+    },
+    {
+      "id": "write-a-fused-operator",
+      "skill_should_trigger": false,
+      "prompt": "Write a fused attention operator for HCU and get it building against DTK."
+    },
+    {
+      "id": "live-benchmark-no-trace",
+      "skill_should_trigger": false,
+      "prompt": "Run this model on the node and benchmark end-to-end throughput at batch size 64."
+    }
+  ]
+}
