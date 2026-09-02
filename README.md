@@ -33,10 +33,11 @@ npx skills add HYGON-AI/skillhub --skill skillhub-contributor \
   --agent claude-code --agent codex --agent cursor --yes
 ```
 
-The pinned CLI recognizes `claude-code`, `codex`, `cursor`, `windsurf`,
-`gemini-cli`, `opencode`, `zed`, `cline`, `roo`, `kilo`, `amp`, `continue`,
-`crush`, `goose`, `trae`, `codebuddy`, `qwen-code`, `antigravity` and `eve`.
-Skills in this catalog are portable and are not written for one agent.
+The pinned CLI installs into any agent it recognizes -- `claude-code`, `codex`,
+`cursor`, `windsurf`, `gemini-cli`, `github-copilot`, `zed`, `trae` and around
+seventy others. Run `npx skills add HYGON-AI/skillhub` without `--agent` to pick
+from the agents detected on your machine. Skills in this catalog are portable
+and are not written for one agent.
 
 ## Add a skill
 
