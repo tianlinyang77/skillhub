@@ -38,7 +38,8 @@ python3 scripts/new_skill.py my-skill-name \
 ```
 
 Pass `--repo HYGON-AI/<product>` instead to opt into a remote product source.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for both paths.
+See the [quick start](docs/publishing/quickstart.md) for the full walkthrough and
+[CONTRIBUTING.md](CONTRIBUTING.md) for the normative rules.
 
 ## Repository structure
 
