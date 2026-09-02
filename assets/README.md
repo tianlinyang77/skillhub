@@ -29,3 +29,11 @@ README column is roughly 1012px, so a 1:1 export is resampled down by a
 fractional factor and small labels smear. Exporting at 2x keeps the source
 dense enough to stay legible after that downscale and on HiDPI displays. Keep
 `OUT_SCALE` at 2 or higher if the type scale changes.
+
+## Contrast
+
+Secondary text (`TXT_FAINT`) sits at 5.2:1 against the ink background, which
+clears WCAG AA for normal text. It was originally 2.3:1 and unreadable at the
+rendered size. Keep any new muted tone at or above 4.5:1; the unlit category
+label floor is deliberately lower because those labels brighten as the
+playhead reaches them.
