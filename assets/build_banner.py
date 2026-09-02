@@ -13,8 +13,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parent
-S = 2  # supersample factor
-W, H = 1200, 384
+S = 3           # internal supersample factor
+OUT_SCALE = 2   # exported pixels per logical pixel
+W, H = 1200, 384  # logical design size
 
 FONTS = Path("C:/Windows/Fonts")
 F_DISPLAY = FONTS / "bahnschrift.ttf"
@@ -133,22 +134,22 @@ def draw_frame(i):
     im = Image.new("RGB", (W * S, H * S), INK)
     d = ImageDraw.Draw(im)
 
-    f_title = display_font(32)
-    f_tag = font(F_MONO, 12)
-    f_blk = font(F_MONO_B, 13)
-    f_cmd = font(F_MONO_B, 15)
-    f_hint = font(F_MONO, 11)
+    f_title = display_font(38)
+    f_tag = font(F_MONO, 14)
+    f_blk = font(F_MONO_B, 16)
+    f_cmd = font(F_MONO_B, 18)
+    f_hint = font(F_MONO, 13)
 
     intro = ease(i / 9.0)
 
     # Header ------------------------------------------------------------
-    d.text((px(PAD), px(24)), "HYGON", font=f_title, fill=mix(INK, TXT, intro))
+    d.text((px(PAD), px(20)), "HYGON", font=f_title, fill=mix(INK, TXT, intro))
     tw = d.textlength("HYGON", font=f_title)
-    d.text((px(PAD) + tw + px(9), px(24)), "SkillHub", font=f_title,
+    d.text((px(PAD) + tw + px(11), px(20)), "SkillHub", font=f_title,
            fill=mix(INK, HYGON_RED, intro))
 
     tag = "agent skills for HCU  ::  one flat catalog, governed categories"
-    d.text((px(PAD), px(58)), tag, font=f_tag, fill=mix(INK, TXT_FAINT, intro))
+    d.text((px(PAD), px(60)), tag, font=f_tag, fill=mix(INK, TXT_FAINT, intro))
 
     d.line([(px(PAD), px(HEAD_H + 8)), (px(W - PAD), px(HEAD_H + 8))],
            fill=mix(INK, RULE, intro), width=S)
@@ -193,7 +194,7 @@ def draw_frame(i):
         lab = mix((78, 88, 108), (243, 246, 252), lit)
         if intro < 1:
             lab = mix(INK, lab, intro)
-        d.text((px(bx0 + 12), px(y0 + (y1 - y0) / 2 - 8)), label,
+        d.text((px(bx0 + 14), px(y0 + (y1 - y0) / 2 - 10)), label,
                font=f_blk, fill=lab)
 
     # Playhead ----------------------------------------------------------
@@ -229,7 +230,7 @@ def draw_frame(i):
         hw = d.textlength(FOOT, font=f_hint)
         d.text((px(W - PAD) - hw, px(cy + 9)), FOOT, font=f_hint, fill=TXT_FAINT)
 
-    return im.resize((W, H), Image.LANCZOS)
+    return im.resize((W * OUT_SCALE, H * OUT_SCALE), Image.LANCZOS)
 
 
 def main():
