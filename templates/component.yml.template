@@ -1,4 +1,5 @@
-# Optional remote component. Local skills use components.d/skillhub.yml.
+# Optional remote component. A local component is the default: set `local: true`,
+# omit `repo`, and use `path: skills/<catalog_dir>`. See components.d/README.md.
 name: Replace with product display name
 repo: HYGON-AI/replace-with-product-repository
 ref: replace-with-reviewed-branch-or-release-tag

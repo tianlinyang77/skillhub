@@ -1,44 +1,57 @@
-# Component 注册
+# Component registry
 
-Component 只负责把 Skill 映射到目录分类和责任域。新增 Skill 时优先运行
-`scripts/new_skill.py --local`，不要手工维护注册内容。
+Each YAML file registers one component: either skills owned by this repository
+(the default) or skills mirrored from one HYGON-AI product repository. One file
+per team avoids a shared manifest conflict.
 
-## 默认：本地 component
+Required fields are `name`, `description`, and a non-empty `skills` list. Each
+skill needs `path`, a globally unique `catalog_dir`, and `category`.
 
-`components.d/skillhub.yml` 是默认入口：
+## Local component (default)
+
+Set `local: true`. `repo` may be omitted and normalizes to
+`HYGON-AI/skillhub`; any other value is rejected. Each skill's `path` must
+equal `skills/<catalog_dir>` exactly:
 
 ```yaml
 name: SkillHub
 local: true
-description: Directly maintained HYGON-AI SkillHub skills.
+description: Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects.
 skills:
-  - path: skills/example-skill
-    catalog_dir: example-skill
+  - path: skills/skillhub-contributor
+    catalog_dir: skillhub-contributor
     category: Developer Tools
 ```
 
-本地 component 可以省略 `repo` 和 `ref`。校验器会把它们固定归一为
-`HYGON-AI/skillhub` 和 `main`，并拒绝把 `local: true` 伪装成其他来源仓库。
-本地 `path` 必须精确等于 `skills/<catalog_dir>`。
+Local entries are validated in place, are never cloned, and have no
+`.skillhub-lock.json` entry or content digest.
 
-## 例外：远端 component
+## Remote component (explicit opt-in)
 
-只有产品团队明确在自己的仓库维护 Skill 时才创建独立 component：
+Omit `local` (or set it to `false`) and provide `repo`, which must be owned by
+[`HYGON-AI`](https://github.com/HYGON-AI). `ref` defaults to `main`. A remote
+repository can be registered by exactly one component, and every skill in that
+component is synchronized from the same ref; multiple refs for one repository
+and skill-level ref overrides are not supported.
 
-```yaml
-name: Quality Gate
-repo: HYGON-AI/quality-gate
-ref: main
-description: Repository publication and compliance gates.
-skills:
-  - path: skills/quality-gate-audit
-    catalog_dir: quality-gate-audit
-    category: Governance and Compliance
-```
+Remote entries are mirrored by `scripts/sync_sources.py`. Unchanged
+third-party or upstream skills are not eligible for publication as HYGON-AI
+skills. Start from
+[`templates/component.yml.template`](../templates/component.yml.template),
+which is the optional remote form.
 
-远端仓库必须属于 `HYGON-AI`。一个远端仓库只能由一个 component 注册，其中
-所有 Skill 使用同一 ref；暂不支持单仓多 ref 或 Skill 级 ref override。
+## Naming and categories
 
-`category` 必须来自[目录分类规范](../docs/governance/taxonomy.md)白名单。
-名称应全局可辨识，裸通用名称会被校验器拒绝。远端模板见
-[`templates/component.yml.template`](../templates/component.yml.template)。
+`category` groups the skill in the generated README index and in
+`skills.sh.json`. It must exactly match an allowlisted value in
+[`docs/governance/taxonomy.md`](../docs/governance/taxonomy.md); adding a
+category is a reviewed governance change.
+
+Use a globally descriptive `catalog_dir`. A `<product>-<action>` name is the
+default for product-specific workflows, not a universal prefix requirement.
+Ambiguous bare names such as `profile`, `benchmark`, and `deploy` are rejected.
+
+Registration does not by itself grant published status. Every destination
+under `skills/` must also satisfy the flat per-skill layout, ownership,
+licensing, self-containment, `skill-card.md`, and `evals/evals.json` contracts
+described in [`docs/governance/admission.md`](../docs/governance/admission.md).

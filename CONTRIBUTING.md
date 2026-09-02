@@ -1,138 +1,193 @@
-# 贡献指南
+# Contributing
 
-SkillHub 默认采用单仓维护：正式 Skill 直接保存在本仓库的 `skills/` 下，一次
-Pull Request 完成内容评审、目录更新和发布。只有产品团队明确希望 Skill 与产品
-代码同仓演进时，才启用远端 component 和同步机制。
+Hygon SkillHub is a publication catalog. By default a skill lives here and ships
+in one pull request. Mirroring from a product repository stays available as an
+explicit opt-in, for teams that want a skill to evolve alongside the code it
+documents.
 
-## 默认流程：直接向 SkillHub 添加 Skill
+## Repository lifecycle
 
-### 1. 生成脚手架
+- A local skill is written under `skills/<skill-name>/` here and registered with
+  `local: true`. This is the default.
+- A remote product candidate remains in its HYGON-AI product repository until admission.
+- Catalog-owned prototypes may use `staging/<skill-name>/SKILL.md.candidate`;
+  a real `SKILL.md` is forbidden anywhere below `staging/` so deep discovery
+  cannot expose candidates.
+- Only direct children of `skills/` are published catalog identities.
+- Generated mirrors, catalog files and lock files are never repaired by hand.
 
-在仓库根目录运行：
+Use [`scripts/new_skill.py`](scripts/new_skill.py) for the mechanical scaffold
+or fall back to [`templates/skill/`](templates/skill). Read the
+[repository layout](docs/architecture/repository-layout.md),
+[admission policy](docs/governance/admission.md), and
+[evaluation contract](docs/evaluation/README.md). Reuse the stable categories
+in the [catalog taxonomy](docs/governance/taxonomy.md).
+
+Workflow files are not enforcement by themselves. Before production release,
+administrators must apply and verify the
+[repository settings baseline](docs/governance/repository-settings.md).
+
+## Publication boundary
+
+SkillHub publishes skills whose source-of-truth repository is owned by the [`HYGON-AI` GitHub organization](https://github.com/HYGON-AI). Organization ownership alone is not sufficient: each published skill must be either HYGON-authored or substantively adapted and validated for HCU, with a HYGON team responsible for ongoing maintenance.
+
+Do not register or mirror an unchanged third-party or upstream skill as a HYGON-AI skill. Link to the canonical upstream skill instead, then request catalog admission after the product team has added and tested the HCU-specific workflow. Preserve all applicable third-party copyright, license, and NOTICE material in an adapted skill.
+
+## Add a local skill (default)
+
+Run the generator from a SkillHub checkout. Without `--repo` it creates the
+skill here and registers it with `local: true`:
 
 ```bash
 python3 scripts/new_skill.py quality-gate-audit \
-  --local \
   --owner "Quality Gate Team" \
   --description "Audit a repository when publication readiness must be verified." \
   --license Apache-2.0 \
   --category "Governance and Compliance" \
-  --with-openai \
   --with-references
 ```
 
-`--local` 是推荐写法；省略 `--local` 且未传 `--repo` 时也会进入本地模式。
-建议先加 `--dry-run` 查看目标路径。
+Then:
 
-脚本会自动：
+1. Replace every `TODO` in `SKILL.md`, `skill-card.md` and `evals/evals.json`.
+2. Set the Skill Card lifecycle to `published` once the evidence is real.
+3. Regenerate and validate:
 
-- 在 `skills/<skill-name>/` 生成最终文件名；
-- 填写名称、描述、责任团队、目录来源和许可证字段；
-- 从仓库根目录复制 `LICENSE`，并在存在时复制 `NOTICE`；
-- 生成 `skill-card.md` 和 `evals/evals.json`；
-- 按需生成 `agents/openai.yaml` 和已链接的 `references/details.md`；
-- 将 Skill 追加到共享的 `components.d/skillhub.yml`。
+   ```bash
+   python3 scripts/generate_catalog.py
+   python3 scripts/validate_skills.py
+   python3 scripts/validate_agent_skills_spec.py
+   python3 scripts/generate_catalog.py --check
+   npx --yes skills@1.5.23 add . --list
+   npx --yes skills@1.5.23 add . --list --full-depth
+   ```
 
-贡献者不需要手工填写 `repo`、`ref`、`local: true` 或 lock。校验器会把省略的
-本地 `repo` 归一为 `HYGON-AI/skillhub`，并拒绝伪造其他来源仓库。
+4. Open one pull request with the content, its registration and the regenerated
+   catalog files.
 
-### 2. 完成内容与证据
+A local component may omit `repo`; when present it must equal
+`HYGON-AI/skillhub`, and the skill's source path must equal
+`skills/<catalog_dir>`. A local skill has no lock entry and no content digest:
+its integrity rests on review, protected branches, required checks and DCO.
 
-至少完成以下三个文件：
+## Add a remote product skill (opt-in)
 
-1. `SKILL.md`：说明触发条件、输入、输出、工作流、边界和安全约束。
-2. `skill-card.md`：填写维护联系方式、运行权限和真实验证边界，并把
-   `lifecycle: staging` 改为 `published`。
-3. `evals/evals.json`：至少 3 个正向触发、2 个负向触发，以及 1 个可观察的
-   行为断言。
-
-删除所有 `TODO` 和脚手架占位符。`SKILL.md` 不得超过 500 行；长流程和领域资料
-放到 `references/`。脚本、资源、依赖和许可证材料必须包含在 Skill 自身目录中，
-保证独立安装后仍可使用。
-
-### 3. 生成目录并校验
-
-```bash
-python3 scripts/generate_catalog.py
-python3 scripts/validate_skills.py
-python3 scripts/validate_agent_skills_spec.py
-python3 scripts/generate_catalog.py --check
-npx --yes skills@1.5.23 add . --list
-npx --yes skills@1.5.23 add . --list --full-depth
-```
-
-本地贡献者不需要运行同步命令。CI 中保留的来源检查会自动跳过本地 component；
-只有显式采用远端模式时才需要手工执行 `sync_sources.py`。
-
-### 4. 提交一个 Pull Request
-
-```bash
-git add skills components.d catalog.json skills.sh.json README.md
-git commit --signoff -m "feat(skills): add quality gate audit"
-git push
-```
-
-默认本地流程只有一个仓库、一个提交序列和一个 Pull Request。
-
-## 例外流程：产品仓自行维护
-
-只有同时满足以下条件时才使用远端模式：
-
-- 产品团队明确承诺在自己的 HYGON-AI 仓库持续维护 Skill；
-- Skill 必须与对应代码版本一起演进；
-- 团队接受“先合产品仓、再同步 SkillHub”的双 PR 流程。
-
-远端脚手架示例：
+Use this only when a product team owns the skill in its own HYGON-AI
+repository. Point the generator at that checkout with `--repo`:
 
 ```bash
 python3 scripts/new_skill.py quality-gate-audit \
-  --repo HYGON-AI/quality-gate \
   --source-root ../quality-gate \
+  --repo HYGON-AI/quality-gate \
   --ref main \
   --owner "Quality Gate Team" \
   --description "Audit a repository when publication readiness must be verified." \
   --license Apache-2.0 \
-  --category "Governance and Compliance"
+  --category "Governance and Compliance" \
+  --product-name "Quality Gate" \
+  --product-description "Repository publication and compliance gates." \
+  --with-references
 ```
 
-远端模式下，先合并产品仓内容，再执行：
+Then:
 
-```bash
-python3 scripts/sync_sources.py --check --component quality-gate
-python3 scripts/sync_sources.py --component quality-gate
-python3 scripts/generate_catalog.py
-python3 scripts/validate_skills.py
-```
+1. Add `skill-card.md`, `evals/evals.json`, required license and NOTICE material, and any self-contained resources.
+2. Confirm the owning team approved public release and the source license permits redistribution.
+3. Keep one `components.d/<component>.yml` per product team; do not edit another team's registry file.
+4. **Merge the product-repository change first.**
+5. Preview the mirror with `python3 scripts/sync_sources.py --check --component <component>`.
+6. Apply the mirror, regenerate the catalog, and validate:
 
-远端镜像只能由同步脚本更新，不得在 SkillHub 的 `skills/` 中直接修补。
+   ```bash
+   python3 scripts/sync_sources.py --component <component>
+   python3 scripts/generate_catalog.py
+   python3 scripts/validate_skills.py
+   python3 scripts/validate_agent_skills_spec.py
+   python3 scripts/generate_catalog.py --check
+   npx --yes skills@1.5.23 add . --list
+   npx --yes skills@1.5.23 add . --list --full-depth
+   ```
 
-## Skill 发布要求
+7. Verify discovery from a clean checkout, then open a pull request with the owning team as reviewers.
 
-- 目录名与 `SKILL.md` frontmatter `name` 必须使用小写连字符并完全一致。
-- 名称应全局可辨识。产品专用工作流优先采用 `<product>-<action>`；
-  `profile`、`benchmark`、`test`、`build`、`deploy` 等裸通用名称会被拒绝。
-- `SKILL.md` frontmatter 只使用 Agent Skills 允许的字段：`name`、
-  `description`、`license`、`compatibility`、`metadata`、`allowed-tools`。
-- description 必须说明能力、触发条件和最近的排除场景。
-- 发布目录保持扁平，禁止嵌套其他 `SKILL.md` 或依赖同级 Skill。
-- 每个 Skill 必须包含非空 `LICENSE`；需要署名时同时包含 `NOTICE`。
-- 禁止发布凭据、私有 endpoint、客户数据、生成缓存、虚拟环境、依赖树和 VCS 元数据。
-- 每个包最多 256 个文件；单文件不超过 5 MiB，总大小不超过 20 MiB。
-- 任何脚本和外部操作必须声明权限边界，并经过与风险相称的测试。
+Remote synchronization currently runs on manual dispatch only. When the first
+remote component is admitted, administrators must explicitly record whether to
+restore scheduled synchronization and at what frequency.
 
-## Pull Request 检查清单
+## Generator notes
 
-- [ ] Skill 由 HYGON 编写，或包含经过实质验证的 HCU 适配。
-- [ ] 明确的 HYGON 团队负责维护并批准公开发布。
-- [ ] 第三方版权、许可证和 NOTICE 义务均已保留。
-- [ ] `skill-card.md` 记录 owner、source、license、lifecycle、权限和验证边界。
-- [ ] `evals/evals.json` 满足最低路由和行为证据要求。
-- [ ] Skill 自包含，不依赖同级 Skill 或仓库外文件。
-- [ ] `validate_skills.py`、Agent Skills 参考校验和生成目录检查通过。
-- [ ] 普通和 full-depth CLI 只发现预期的已发布 Skill。
-- [ ] 若使用远端 component，`sync_sources.py --check` 证明 ref、commit、digest、lock 和镜像一致。
-- [ ] commit 使用 `git commit --signoff` 记录 DCO 确认。
+Use `--dry-run` to review destinations first. The generator refuses to
+overwrite an existing skill, rejects unapproved repositories, categories and
+generic names, and requires a non-empty source `LICENSE` unless
+`--license-file` names another reviewed license text. It copies a root
+`NOTICE`, `NOTICE.txt` or `NOTICE.md` automatically; use `--notice-file` for a
+different required notice. With `--with-references`, it also creates a linked
+`references/details.md` scaffold and tells the agent when to read it. The
+script emits a non-blocking warning for a small set of obvious standard-license
+mismatches; it does not determine legal terms or compatibility. Reviewers must
+confirm that `--license` matches the copied text and that all NOTICE obligations
+are satisfied.
 
-目录结构详见[仓库目录规范](docs/architecture/repository-layout.md)，分类选择详见
-[目录分类规范](docs/governance/taxonomy.md)，评估要求详见
-[评估契约](docs/evaluation/README.md)。
+The generated Skill Card remains `staging` and its author-owned sections and
+Eval prompts contain `TODO` markers. Replace them with real workflow,
+permission and evaluation evidence, then change the lifecycle to `published`.
+
+## Add a catalog-owned staging prototype
+
+Use `staging/` for a SkillHub-wide workflow that is not ready for admission.
+Write the entrypoint as `SKILL.md.candidate` and complete the same admission
+evidence as any other skill. Promotion is a reviewed change that moves the
+candidate to `skills/`, renames the entrypoint to `SKILL.md`, registers it with
+`local: true`, generates the catalog, and validates both normal and full-depth
+discovery.
+
+## Skill requirements
+
+- Folder and frontmatter names use lowercase hyphen-case and match exactly.
+- Use a globally descriptive name. Prefer `<product>-<action>` for
+  product-specific workflows, while cross-product skills may use another clear
+  capability name. Bare generic names such as `add-model`, `profile`,
+  `benchmark`, `test`, `build`, and `deploy` are rejected.
+- YAML frontmatter uses only Agent Skills fields: required `name` and
+  `description`, plus optional `license`, `compatibility`, `metadata`, and
+  experimental `allowed-tools`. Put vendor fields such as version, author and
+  tags inside `metadata`, whose keys and values must all be strings.
+- The description explains capability, trigger conditions, and the nearest important exclusion.
+- Keep `SKILL.md` at or below 500 lines; move details into `references/`.
+- Keep the published catalog flat. Do not place another `SKILL.md` inside a skill.
+- Remove scaffold placeholders and every `.template` file before publication.
+- Bundle every required dependency inside the skill directory. Do not depend on sibling skills or source-repository files that an installer will not copy.
+- Add a schema-versioned `skill-card.md` with machine-readable owner, source,
+  license and lifecycle frontmatter plus the required human-readable sections.
+- Add schema-versioned `evals/evals.json` with the matching skill identity, at
+  least three positive triggers, two negative triggers, and one behavioral
+  assertion.
+- Use only the standard optional directories `agents/`, `references/`, `scripts/`, and `assets/` unless a documented format requires another path.
+- Put repeatable deterministic operations in tested `scripts/`.
+- Do not include credentials, private endpoints, personal data, generated caches, or unrelated documentation.
+- Do not request broader permissions than the workflow requires.
+- Keep packages at or below 256 files, 5 MiB per file and 20 MiB total. Do not
+  publish VCS metadata, virtual environments, dependency trees, caches or
+  case-colliding paths.
+
+## Pull request checklist
+
+- [ ] The source-of-truth repository is owned by [`HYGON-AI`](https://github.com/HYGON-AI).
+- [ ] The skill is HYGON-authored or documents substantive, tested HCU adaptations.
+- [ ] A HYGON team owns ongoing maintenance and approved publication.
+- [ ] Third-party attribution, license, and NOTICE requirements are preserved.
+- [ ] The source and catalog licenses are compatible.
+- [ ] The installed skill retains required LICENSE and NOTICE material.
+- [ ] Scripts were reviewed and tested.
+- [ ] `skill-card.md` identifies owner, source, license, lifecycle, runtime permissions, and validation boundary.
+- [ ] `evals/evals.json` contains the minimum positive, negative, and behavioral evidence.
+- [ ] The skill contains no nested `SKILL.md` or sibling-skill dependency.
+- [ ] `python3 scripts/validate_skills.py` passes.
+- [ ] `python3 scripts/validate_agent_skills_spec.py` passes against the pinned reference implementation.
+- [ ] `python3 scripts/generate_catalog.py --check` passes.
+- [ ] `python3 scripts/sync_sources.py --check` proves every remote ref, commit, digest, lock entry and mirror agree.
+- [ ] `npx --yes skills@1.5.23 add . --list` discovers only the intended published skills.
+- [ ] `npx --yes skills@1.5.23 add . --list --full-depth` also discovers only the intended published skills.
+- [ ] No mirrored files were edited only in the catalog.
+
+Use `git commit --signoff` so the contribution records [Developer Certificate of Origin](https://developercertificate.org/) agreement.
