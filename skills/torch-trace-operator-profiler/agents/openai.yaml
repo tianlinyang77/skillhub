@@ -1,0 +1,4 @@
+interface:
+  display_name: "Torch Trace Operator Profiler"
+  short_description: "Analyze torch.profiler traces for operator bottlenecks."
+  default_prompt: "Use $torch-trace-operator-profiler to analyze a torch.profiler JSON trace for a slow operator."

@@ -13,6 +13,18 @@
         "path": "skills/skillhub-contributor"
       },
       "catalog_path": "skills/skillhub-contributor"
+    },
+    {
+      "name": "torch-trace-operator-profiler",
+      "description": "Analyze a torch.profiler Chrome/Perfetto JSON trace to attribute time across Python scopes, ATen operators, GPU kernels, runtime API overhead and memory copies. Use when diagnosing a slow PyTorch operator, custom extension, Triton kernel or submodule from a captured trace.",
+      "category": "Performance and Profiling",
+      "product": "SkillHub",
+      "source": {
+        "repo": "HYGON-AI/skillhub",
+        "ref": "main",
+        "path": "skills/torch-trace-operator-profiler"
+      },
+      "catalog_path": "skills/torch-trace-operator-profiler"
     }
   ]
 }

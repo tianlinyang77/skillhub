@@ -8,6 +8,13 @@
       "skills": [
         "skillhub-contributor"
       ]
+    },
+    {
+      "title": "Performance and Profiling",
+      "description": "HYGON-AI skills for performance and profiling workflows.",
+      "skills": [
+        "torch-trace-operator-profiler"
+      ]
     }
   ]
 }
