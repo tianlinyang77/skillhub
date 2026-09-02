@@ -28,7 +28,7 @@ LANE_B = (9, 13, 23)
 GRID = (22, 32, 58)
 RULE = (34, 46, 76)
 TXT = (232, 237, 247)
-TXT_FAINT = (62, 76, 107)
+TXT_FAINT = (118, 132, 158)   # 5.2:1 on INK -- WCAG AA for normal text
 PLAY = (87, 224, 255)
 HYGON_RED = (232, 56, 79)
 
@@ -135,7 +135,7 @@ def draw_frame(i):
     d = ImageDraw.Draw(im)
 
     f_title = display_font(38)
-    f_tag = font(F_MONO, 14)
+    f_tag = font(F_MONO, 15)
     f_blk = font(F_MONO_B, 16)
     f_cmd = font(F_MONO_B, 18)
     f_hint = font(F_MONO, 13)
@@ -191,7 +191,7 @@ def draw_frame(i):
             cap_c = mix(INK, cap_c, intro)
         d.rectangle([px(bx0), px(y0), px(bx0 + 3), px(y1)], fill=cap_c)
 
-        lab = mix((78, 88, 108), (243, 246, 252), lit)
+        lab = mix((104, 116, 138), (243, 246, 252), lit)
         if intro < 1:
             lab = mix(INK, lab, intro)
         d.text((px(bx0 + 14), px(y0 + (y1 - y0) / 2 - 10)), label,
