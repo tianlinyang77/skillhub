@@ -1,4 +1,4 @@
 interface:
-  display_name: "Hygon SkillHub Contributor"
-  short_description: "Create and onboard Hygon agent skills"
-  default_prompt: "Use $skillhub-contributor to create or onboard an agent skill into Hygon SkillHub."
+  display_name: "HYGON-AI SkillHub Contributor"
+  short_description: "Create and onboard HYGON-AI Agent Skills"
+  default_prompt: "Use $skillhub-contributor to create or onboard an Agent Skill into HYGON-AI SkillHub."

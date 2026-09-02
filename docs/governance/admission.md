@@ -1,63 +1,54 @@
-# Skill admission policy
+# Skill 准入策略
 
-A directory is not publishable merely because a skills CLI can discover its
-`SKILL.md`. Admission requires ownership, portability, behavioral evidence,
-redistribution rights, and an auditable source.
+进入 `skills/` 表示该软件包可以被公开发现和独立安装，不只是“有一个
+`SKILL.md`”。所有本地和远端 Skill 必须满足相同质量门禁。
 
-## Required decisions
+## 1. 所有权和来源
 
-Before synchronization or publication, record:
+- 默认来源是本仓库 `HYGON-AI/skillhub`，由 `local: true` component 管理。
+- 每个 Skill 必须有明确的 HYGON 维护团队和可持续联系方式。
+- 只有产品团队显式承担维护责任时，才允许登记远端 HYGON-AI 仓库。
+- 未经修改的第三方 Skill 不得作为 HYGON-AI Skill 发布；应链接正式上游。
+- HCU 适配内容必须保留上游版权、许可证和 NOTICE。
 
-1. The HYGON-AI owning team and ongoing maintainer.
-2. The source repository, source path and maintained ref or release tag.
-3. Whether the content is HYGON-authored or a substantive HCU adaptation.
-4. Applicable license, copyright and NOTICE obligations.
-5. Intended positive prompts and nearby prompts that must not trigger it.
-6. Required tools, network access, hardware and destructive side effects.
-7. The validation environment and evidence available for its claims.
+## 2. 可移植性
 
-## Publication gates
+- 一个直接子目录对应一个 Skill，目录名与 frontmatter `name` 完全一致。
+- 安装目录必须自包含，禁止依赖同级 Skill 或仓库外文件。
+- `SKILL.md` 不超过 500 行，详细内容放入 `references/`。
+- 禁止嵌套 `SKILL.md`、残留 `.template`、缓存、依赖树、虚拟环境和 VCS 元数据。
+- 所有 Markdown 相对链接必须留在 Skill 目录内且真实存在。
 
-- The skill is one flat, lowercase hyphen-case directory.
-- `SKILL.md` is at most 500 lines and contains clear trigger boundaries.
-- Frontmatter passes both the catalog's strict six-field/type checks and the
-  pinned Agent Skills reference validator.
-- All required resources remain inside the installed skill directory.
-- No nested `SKILL.md`, sibling-skill dependency, symlink or escaping path is
-  present.
-- `skill-card.md` has schema version 1, matches the component source, and
-  identifies owner, license and published lifecycle.
-- `evals/evals.json` has schema version 1, matches the Skill identity, and
-  contains positive, negative and behavior evidence.
-- Executable helpers are reviewed and tested on representative input.
-- Secret, license, link, file-size and generated-catalog checks pass.
-- Remote content resolves to a recorded commit in `.skillhub-lock.json`.
-- The independently resolved remote tree, recorded commit, lock digest and
-  published package are byte-consistent.
-- Required repository checks and owning-team review pass.
+## 3. 结构化证据
 
-## Staging and exceptions
+每个发布包必须包含：
 
-`staging/` does not grant trust or publication status. A candidate may remain
-there while its trigger boundary, licensing or behavior evidence is repaired.
-Remote product skills should normally remain only in their source repository
-until admitted.
+- `skill-card.md`：schema version、owner、source、license、published lifecycle、
+  运行权限和验证边界；
+- `evals/evals.json`：至少 3 个正向、2 个负向和 1 个带行为断言的正向用例；
+- 非空 `LICENSE`，以及许可证要求的 `NOTICE`；
+- 实际工作流所需的全部脚本、references 和 assets。
 
-Catalog-owned candidates use `staging/<skill-name>/SKILL.md.candidate`. A real
-`SKILL.md` is forbidden anywhere below `staging/` because full-depth discovery
-would make it installable before admission. Promotion must explicitly move the
-candidate under `skills/`, rename the entrypoint, register its source and add
-all required publication evidence.
+## 4. 安全与权限
 
-`admission-exceptions.yml` uses schema version 1 and records known candidates
-that are not currently eligible. Duplicate entries, unsafe paths, malformed
-reasons, and candidates simultaneously registered for publication are rejected.
-An exception is not a waiver and must never cause a failing skill to appear in
-`skills/`.
+- 禁止凭据、私有 endpoint、客户数据和未公开产品信息。
+- 网络、写文件、执行命令、远端操作和破坏性行为必须在 Skill Card 中声明。
+- 可执行脚本必须经过人工评审和与风险相称的测试。
+- 校验通过只证明静态契约成立，不能代替真实运行验证。
 
-## Removal and deprecation
+## 5. 发布门禁
 
-Remove a published skill when its owner disappears, its source is deleted, its
-license changes incompatibly, or its behavior can no longer be validated.
-Record user-visible removals in release notes before deleting published catalog
-entries. Do not retain an unmaintained skill merely to preserve catalog count.
+本地 Skill 必须通过：
+
+- 仓库单元测试；
+- `validate_skills.py`；
+- Agent Skills 固定参考实现校验；
+- 生成目录一致性检查；
+- 普通和 full-depth CLI 发现检查；
+- DCO 检查和代码评审。
+
+远端 Skill 还必须通过 `sync_sources.py --check`，证明 ref、具体 commit、源目录
+digest、lock 条目和发布镜像一致。
+
+任何检查失败时不得把 staging、部分验证或静态结果描述为已发布、已通过或已在
+真实环境验证。

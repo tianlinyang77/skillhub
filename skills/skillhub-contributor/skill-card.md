@@ -12,8 +12,8 @@ lifecycle: published
 
 ## Summary
 
-Creates, reviews, registers, synchronizes, and validates portable skills for
-the HYGON-AI organization catalog.
+Creates, reviews, and validates local-first Agent Skills for the HYGON-AI
+organization catalog, with remote synchronization available only by explicit choice.
 
 ## Owner
 
@@ -32,9 +32,10 @@ Apache-2.0. The full license text is bundled in this installed skill directory.
 
 ## Runtime and permissions
 
-Requires a checkout of SkillHub, Python 3.11 or newer, Git, network access for
-remote synchronization, and repository write access only when the user asks to
-apply or submit changes. Validation and synchronization preview are read-only.
+Requires a checkout of SkillHub, Python 3.11 or newer, and Git. Network access
+is needed for pinned reference checks and optional remote synchronization.
+Repository writes occur only when the user asks to create, update, or submit a
+Skill; validation and synchronization preview remain read-only.
 
 ## Validation
 

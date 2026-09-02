@@ -1,10 +1,10 @@
 ## Summary
 
-Describe the skill, owning product, source repository, and intended user prompts.
+Describe the skill, owning team, local or explicit remote mode, and intended user prompts.
 
 ## Publication checks
 
-- [ ] Every registered source-of-truth repository is owned by [`HYGON-AI`](https://github.com/HYGON-AI).
+- [ ] The default local source is this SkillHub repository; any explicit remote source belongs to [`HYGON-AI`](https://github.com/HYGON-AI).
 - [ ] Each skill is HYGON-authored or includes substantive, tested HCU adaptations.
 - [ ] A HYGON team owns ongoing maintenance and approved public release.
 - [ ] Third-party attribution, license, and NOTICE requirements are preserved.
@@ -16,6 +16,6 @@ Describe the skill, owning product, source repository, and intended user prompts
 - [ ] The published skill is flat and contains no nested `SKILL.md` or sibling-skill dependency.
 - [ ] No credentials, private endpoints, customer data, or unpublished information are included.
 - [ ] Local validation and generated-catalog checks pass.
-- [ ] Pinned Agent Skills reference validation and remote provenance checks pass.
+- [ ] Pinned Agent Skills reference validation passes; remote provenance checks pass when a remote component is used.
 - [ ] CLI discovery lists only intended published skills, not templates or staging content.
 - [ ] Commits include [DCO sign-off](https://developercertificate.org/).

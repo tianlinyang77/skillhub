@@ -1,33 +1,46 @@
 # Skill onboarding reference
 
-## Scaffold command
+## Local-first scaffold
 
-From the SkillHub checkout, generate the product-owned directory and component
-registration together:
+From the SkillHub checkout:
 
 ```bash
 python3 scripts/new_skill.py example-skill \
-  --source-root ../product-repository \
-  --repo HYGON-AI/product-repository \
-  --owner "Product Team" \
-  --description "Describe the capability and when it should trigger." \
+  --local \
+  --owner "Owning Team" \
+  --description "Describe the capability, trigger, and nearest exclusion." \
   --license Apache-2.0 \
-  --category Inference \
+  --category "Developer Tools" \
+  --with-openai \
   --with-references
 ```
 
-Review with `--dry-run` when paths or repository checkouts are uncertain. The
-generated card deliberately remains `staging`; complete every `TODO`, replace
-the Eval prompts with real routing boundaries, and set `published` only after
-the evidence is ready. Commit and merge the product repository first. The
-component change remains local in SkillHub until the source ref contains the
-reviewed Skill. With `--with-references`, the generated `SKILL.md` links to the
-new `references/details.md` scaffold so contributors can state when detailed
-material should be loaded.
+Use `--dry-run` when reviewing destinations. The generated card remains
+`staging`; replace every scaffold marker, add real evaluation prompts and
+validation evidence, then set `published`. The generator writes directly to
+`skills/<name>/` and appends the shared local registration.
 
-## Component schema
+## Local component semantics
 
-Create `components.d/<slug>.yml`:
+The shared registration may omit `repo` and `ref`:
+
+```yaml
+name: SkillHub
+local: true
+description: Directly maintained HYGON-AI SkillHub skills.
+skills:
+  - path: skills/example-skill
+    catalog_dir: example-skill
+    category: Developer Tools
+```
+
+Validation normalizes the source to `HYGON-AI/skillhub@main`, requires the path
+to equal `skills/<catalog_dir>`, and rejects a different declared repository.
+Local skills do not receive lock entries and are edited directly in SkillHub.
+
+## Optional remote component
+
+Create a remote component only when the product team explicitly owns the source:
 
 ```yaml
 name: Product display name
@@ -36,68 +49,49 @@ ref: main
 description: One sentence describing the product and its skills.
 skills:
   - path: skills/example-skill
-    catalog_dir: example-skill
+    catalog_dir: product-example-skill
     category: Inference
 ```
 
-Use `local: true` only for a skill whose source of truth is the SkillHub repository itself. Remote components are cloned from GitHub during synchronization.
-
-For a catalog-owned prototype, begin with
-`staging/<skill-name>/SKILL.md.candidate`. Never use a real `SKILL.md` below
-`staging/`; deep discovery can install it before review. During promotion, move
-the candidate into `skills/<skill-name>/`, rename the entrypoint to `SKILL.md`,
-add its local component registration, and add the same Skill Card, Eval and
-license evidence required from product-owned skills.
-
-Each `catalog_dir` must be unique across the catalog. Keep it equal to the skill frontmatter `name` unless a temporary compatibility alias is unavoidable.
+Generate it with `--repo` and `--source-root`, merge the product repository
+first, and then synchronize. Remote mirrors are read-only in SkillHub.
 
 ## Release checklist
 
 - The owning team approved public release.
-- `SKILL.md` uses only the six Agent Skills fields; `metadata` keys and values
-  are strings and client/catalog fields do not leak into portable frontmatter.
-- The description says both what the skill does and when it should trigger.
-- The published directory is flat and contains no nested `SKILL.md`.
-- `skill-card.md` uses schema version 1 and binds owner, component source,
-  license and published lifecycle.
-- `evals/evals.json` uses schema version 1, names the Skill, and contains at
-  least three positive triggers, two negative triggers, and one behavior assertion.
-- Relative Markdown links in `SKILL.md`, `skill-card.md`, and references resolve inside the skill directory.
-- Scripts contain no embedded credentials and have been executed on a representative input.
-- The source repository has an explicit compatible license.
-- Required LICENSE and NOTICE material remains available after isolated installation.
-- The component registry points to an immutable release branch or the team's maintained default branch.
-- Local validation and catalog generation checks pass.
+- `SKILL.md` uses only Agent Skills fields and has a bounded trigger description.
+- The published directory is flat and self-contained.
+- `skill-card.md` records owner, exact source, license, published lifecycle,
+  permissions, and validation limits.
+- `evals/evals.json` has at least three positive triggers, two negative triggers,
+  and one positive behavioral assertion.
+- Relative Markdown links resolve inside the package.
+- Executable scripts contain no credentials and were tested on representative inputs.
+- Required LICENSE and NOTICE material survives isolated installation.
+- Catalog validation, generated metadata, reference validation, and both CLI
+  discovery modes pass.
+- Remote mode additionally proves ref, commit, digest, lock, and mirror agreement.
 
 ## Commands
 
 ```bash
+python3 scripts/generate_catalog.py
 python3 scripts/validate_skills.py
 python3 scripts/validate_agent_skills_spec.py
-python3 scripts/generate_catalog.py
 python3 scripts/generate_catalog.py --check
-python3 scripts/sync_sources.py --check --component product-slug
-python3 scripts/sync_sources.py --component product-slug
 npx --yes skills@1.5.23 add . --list
 npx --yes skills@1.5.23 add . --list --full-depth
 ```
 
-After publication, verify discovery without installing:
-
-```bash
-npx skills add HYGON-AI/skillhub --list
-```
-
-Install one skill non-interactively:
-
-```bash
-npx skills add HYGON-AI/skillhub --skill example-skill --yes
-```
+For an explicit remote component, additionally run
+`python3 scripts/sync_sources.py --check --component <component>` before and
+after applying synchronization.
 
 ## Common failures
 
-- **Unregistered directory**: add the skill to exactly one component file or remove the orphaned catalog directory.
-- **Name mismatch**: make `skills/<directory>` and frontmatter `name` identical.
-- **Catalog drift**: run `python3 scripts/generate_catalog.py` and commit all generated files.
-- **Private clone failure**: grant the synchronization token read access to the product repository without placing the token in a URL.
-- **Mirrored edit overwritten**: make the change in the source repository, merge it there, then synchronize again.
+- **Unregistered local directory**: rerun the scaffold or append it to the shared local component.
+- **False local source**: remove the local `repo` field or set it to `HYGON-AI/skillhub`.
+- **Name mismatch**: make the directory, `catalog_dir`, frontmatter name, eval identity, and UI invocation agree.
+- **Catalog drift**: run `python3 scripts/generate_catalog.py` and commit every generated file.
+- **Remote clone failure**: verify the explicit product repository and narrowly scoped read token.
+- **Remote mirror overwritten**: change and merge the product source, then synchronize again.

@@ -1,3 +1,4 @@
+# Optional remote component. Local skills use components.d/skillhub.yml.
 name: Replace with product display name
 repo: HYGON-AI/replace-with-product-repository
 ref: replace-with-reviewed-branch-or-release-tag

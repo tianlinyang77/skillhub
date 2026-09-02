@@ -1,14 +1,13 @@
-# Contribution templates
+# 贡献模板
 
-Templates are deliberately non-discoverable: every scaffold-only file uses a
-`.template` suffix. Published packages reject any remaining `.template` file.
+模板有意设计为不可发现：所有脚手架专用文件使用 `.template` 后缀。发布包会
+拒绝任何残留 `.template` 文件。
 
-Prefer `python3 scripts/new_skill.py --help`: it writes the final filenames,
-fills deterministic identity fields, copies reviewed license material, and
-builds the component registration. These templates remain the manual fallback.
+优先使用 `python3 scripts/new_skill.py --help`：脚本会写入最终文件名、填写
+确定性身份字段、复制已审核许可证材料并生成 component 注册。默认直接生成到
+本仓库 `skills/`；只有显式传入远端 `--repo` 时才生成到产品仓 checkout。
+这里的模板只作为手工 fallback。
 
-For manual creation, copy `templates/skill/` to a product repository's
-`skills/<skill-name>/`, rename the package files listed in
-`README.md.template`, delete that scaffold README, replace every placeholder,
-and validate the installed directory in isolation before requesting catalog
-admission.
+手工创建时，把 `templates/skill/` 复制到本仓库的 `skills/<skill-name>/`，
+根据 `README.md.template` 重命名软件包文件，删除脚手架 README，替换所有
+占位符，并在申请目录准入前对独立安装目录执行校验。
