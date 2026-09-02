@@ -10,3 +10,6 @@ skills:
   - path: "skills/torch-trace-operator-profiler"
     catalog_dir: "torch-trace-operator-profiler"
     category: "Performance and Profiling"
+  - path: "skills/rewrite-hygon-git-identity"
+    catalog_dir: "rewrite-hygon-git-identity"
+    category: "CI and Release"

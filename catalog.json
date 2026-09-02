@@ -3,6 +3,18 @@
   "organization": "HYGON-AI",
   "skills": [
     {
+      "name": "rewrite-hygon-git-identity",
+      "description": "审计并安全重写 HYGON 仓库 Git Commit 历史中的禁止或不规范身份字段。适用于 Author Name、Author Email、Committer Name、Committer Email 或 Commit Message 包含大小写不敏感的 sugon/rogon，或者需要把旧邮箱域按相同用户名映射为 @hygon.com 的场景。执行时使用双 mirror、离线 bundle、签名影响审批、严格 Tree 与拓扑验证、临时审核分支以及受保护的 force-with-lease 正式替换。不得用于源码内容清理、许可证头、密钥、CVE、SAST 或普通 git config 修改。",
+      "category": "CI and Release",
+      "product": "SkillHub",
+      "source": {
+        "repo": "HYGON-AI/skillhub",
+        "ref": "main",
+        "path": "skills/rewrite-hygon-git-identity"
+      },
+      "catalog_path": "skills/rewrite-hygon-git-identity"
+    },
+    {
       "name": "skillhub-contributor",
       "description": "Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures.",
       "category": "Developer Tools",

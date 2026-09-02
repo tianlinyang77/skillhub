@@ -80,7 +80,7 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 | Product | Description | Skills |
 |---|---|---|
-| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
+| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`rewrite-hygon-git-identity`](skills/rewrite-hygon-git-identity), [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
 
 <!-- catalog:end -->
 
@@ -88,7 +88,13 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 <!-- categories:start -->
 
-2 skills across 2 categories.
+3 skills across 3 categories.
+
+### CI and Release
+
+| Skill | Product | Description |
+|---|---|---|
+| [`rewrite-hygon-git-identity`](skills/rewrite-hygon-git-identity) | SkillHub | 审计并安全重写 HYGON 仓库 Git Commit 历史中的禁止或不规范身份字段。适用于 Author Name、Author Email、Committer Name、Committer Email 或 Commit Message 包含大小写不敏感的 sugon/rogon，或者需要把旧邮箱域按相同用户名映射为 @hygon.com 的场景。执行时使用双 mirror、离线 bundle、签名影响审批、严格 Tree 与拓扑验证、临时审核分支以及受保护的 force-with-lease 正式替换。不得用于源码内容清理、许可证头、密钥、CVE、SAST 或普通 git config 修改。 |
 
 ### Developer Tools
 
