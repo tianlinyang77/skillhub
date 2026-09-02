@@ -1,8 +1,10 @@
 # Add a skill: quick start
 
-The end-to-end path for adding a local skill, which is the default. For the
-normative rules see [CONTRIBUTING.md](../../CONTRIBUTING.md); for the release
-flow see [publishing](README.md).
+The end-to-end path for adding a skill. Steps 1-5 cover a local skill, which is
+the default; the last section covers the opt-in remote path for a skill owned
+by a product repository. For the normative rules see
+[CONTRIBUTING.md](../../CONTRIBUTING.md); for the release flow see
+[publishing](README.md).
 
 ```
 new_skill.py
@@ -89,9 +91,78 @@ catalog files. `--signoff` is required; the DCO check fails without it.
 | `template scaffold file is not publishable` | A `.template` file was copied in unrenamed |
 | DCO check fails | The commit is missing `--signoff` |
 
-## Remote components
+## Remote components (opt-in)
 
-If a product team owns the skill in its own HYGON-AI repository, pass
-`--repo HYGON-AI/<product>` and `--source-root <checkout>` instead. That path
-merges the product change first, then synchronizes. See
-[CONTRIBUTING.md](../../CONTRIBUTING.md) for the full sequence.
+Use this only when a product team owns the skill in its own HYGON-AI
+repository and wants it to evolve alongside the code it documents. Everything
+above still applies; the differences are that the skill is authored elsewhere,
+the change lands in two repositories, and the mirror carries provenance.
+
+```
+new_skill.py --repo ...
+  -> fill TODOs in the PRODUCT repository
+  -> merge the product pull request FIRST
+  -> sync_sources.py --check   (preview)
+  -> sync_sources.py           (apply)
+  -> generate_catalog.py, validate
+  -> commit --signoff, open the SkillHub pull request
+```
+
+### Scaffold into the product repository
+
+```bash
+python3 scripts/new_skill.py <skill-name>   --source-root ../<product-checkout>   --repo HYGON-AI/<product>   --ref main   --owner "Owning team"   --description "What it does, when it triggers, and the nearest case that must not trigger it."   --license Apache-2.0   --category "Operator Development"   --product-name "Display name"   --product-description "One sentence about the product and its skills."
+```
+
+The skill files are written under `<product-checkout>/skills/<skill-name>/`,
+and the registration is written to `components.d/<component>.yml` here.
+
+### Merge the product change first
+
+Fill in the `TODO` markers in the product repository, then merge that pull
+request. Synchronization resolves the registered `ref` to a concrete commit, so
+the content must already be on that ref before the mirror can be applied.
+
+### Preview, then apply the mirror
+
+```bash
+python3 scripts/sync_sources.py --check --component <component>
+```
+
+The check reports the resolved repository, ref, commit and destination without
+writing anything. Review those before applying:
+
+```bash
+python3 scripts/sync_sources.py --component <component>
+python3 scripts/generate_catalog.py
+python3 scripts/validate_skills.py
+python3 scripts/validate_agent_skills_spec.py
+python3 scripts/generate_catalog.py --check
+```
+
+Applying the mirror also writes a `.skillhub-lock.json` entry recording the
+resolved commit and the source-tree SHA-256 digest. Open the SkillHub pull
+request with the owning team as reviewers.
+
+### Rules that differ from the local path
+
+- The mirrored files under `skills/` are generated. Never edit them here: fix
+  the product repository and synchronize again, or the digest check fails.
+- One repository is registered by exactly one component, and every skill in
+  that component shares one `ref`. Skill-level ref overrides are not supported.
+- Synchronization currently runs on manual dispatch only. Admitting the first
+  remote component requires an explicit decision on whether to restore
+  scheduled synchronization and at what frequency.
+
+### Additional failures
+
+| Message | Cause |
+| --- | --- |
+| `does not contain SKILL.md` | The product change is not merged on the registered `ref` yet |
+| `drift <name>: published tree does not match resolved source` | A mirrored file was hand-edited here |
+| `remote component requires repo` | `local` is false but no `repo` was given |
+| `source package is not publishable` | The source directory fails the same portability gates |
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the normative rules and
+[supply-chain integrity](../security/supply-chain.md) for what the recorded
+commit and digest do and do not prove.
