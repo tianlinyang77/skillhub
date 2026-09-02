@@ -1,5 +1,8 @@
 # Publishing and release flow
 
+For the step-by-step contributor path, see
+[Add a skill: quick start](quickstart.md). This page records the release flow.
+
 ## Local skill (default)
 
 1. Add the self-contained skill under `skills/<skill-name>/` in this repository.

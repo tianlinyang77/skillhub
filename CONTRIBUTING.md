@@ -35,6 +35,9 @@ Do not register or mirror an unchanged third-party or upstream skill as a HYGON-
 
 ## Add a local skill (default)
 
+For a condensed walkthrough with the common failure messages, see
+[Add a skill: quick start](docs/publishing/quickstart.md).
+
 Run the generator from a SkillHub checkout. Without `--repo` it creates the
 skill here and registers it with `local: true`:
 

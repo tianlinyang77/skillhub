@@ -4,6 +4,7 @@ This directory contains the maintained contracts for the HYGON-AI skills
 catalog. Root-level documents remain short entry points; detailed policy and
 architecture belong here.
 
+- [Add a skill: quick start](publishing/quickstart.md)
 - [Repository layout](architecture/repository-layout.md)
 - [Admission policy](governance/admission.md)
 - [Repository settings baseline](governance/repository-settings.md)

@@ -19,11 +19,24 @@ npx skills add HYGON-AI/skillhub --list
 npx skills add HYGON-AI/skillhub
 ```
 
-Install one skill for Codex without prompts:
+Install one skill into a specific agent without prompts:
 
 ```bash
-npx skills add HYGON-AI/skillhub --skill skillhub-contributor --agent codex --yes
+npx skills add HYGON-AI/skillhub --skill skillhub-contributor --agent claude-code --yes
 ```
+
+Pass `--agent` more than once to install into several agents, or `--agent '*'`
+for every agent the CLI detects:
+
+```bash
+npx skills add HYGON-AI/skillhub --skill skillhub-contributor \
+  --agent claude-code --agent codex --agent cursor --yes
+```
+
+The pinned CLI recognizes `claude-code`, `codex`, `cursor`, `windsurf`,
+`gemini-cli`, `opencode`, `zed`, `cline`, `roo`, `kilo`, `amp`, `continue`,
+`crush`, `goose`, `trae`, `codebuddy`, `qwen-code`, `antigravity` and `eve`.
+Skills in this catalog are portable and are not written for one agent.
 
 ## Add a skill
 
@@ -38,7 +51,8 @@ python3 scripts/new_skill.py my-skill-name \
 ```
 
 Pass `--repo HYGON-AI/<product>` instead to opt into a remote product source.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for both paths.
+See the [quick start](docs/publishing/quickstart.md) for the full walkthrough and
+[CONTRIBUTING.md](CONTRIBUTING.md) for the normative rules.
 
 ## Repository structure
 
