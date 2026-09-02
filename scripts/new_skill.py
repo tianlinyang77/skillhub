@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a product-owned Skill scaffold and its catalog registration."""
+"""Create a local-first Skill scaffold and its catalog registration."""
 
 # Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 # SPDX-License-Identifier: Apache-2.0
@@ -17,6 +17,7 @@ import yaml
 try:
     from scripts.skillhub import (
         ALLOWED_CATEGORIES,
+        CATALOG_REPO,
         FORBIDDEN_GENERIC_CATALOG_DIRS,
         MAX_DESCRIPTION_LENGTH,
         OFFICIAL_GITHUB_OWNER,
@@ -27,6 +28,7 @@ try:
 except ModuleNotFoundError:  # Direct execution adds scripts/, not the repository root.
     from skillhub import (
         ALLOWED_CATEGORIES,
+        CATALOG_REPO,
         FORBIDDEN_GENERIC_CATALOG_DIRS,
         MAX_DESCRIPTION_LENGTH,
         OFFICIAL_GITHUB_OWNER,
@@ -76,6 +78,7 @@ class ScaffoldConfig:
     description: str
     license_id: str
     category: str
+    local: bool
     component: str
     product_name: str
     product_description: str
@@ -175,9 +178,11 @@ def validate_config(config):
         raise ScaffoldError(
             f"catalog root does not contain components.d: {config.catalog_root}"
         )
-    if config.source_root.resolve() == config.catalog_root.resolve():
+    if config.local and config.source_root.resolve() != config.catalog_root.resolve():
+        raise ScaffoldError("local skills must be created in the SkillHub checkout")
+    if not config.local and config.source_root.resolve() == config.catalog_root.resolve():
         raise ScaffoldError(
-            "new_skill.py creates product-owned skills; catalog-owned skills must use staging/"
+            "remote product skills must use a product repository outside SkillHub"
         )
     if not config.license_file.is_file() or config.license_file.stat().st_size == 0:
         raise ScaffoldError("license file must be a non-empty file")
@@ -399,6 +404,8 @@ def render_component(config):
             raise ScaffoldError(f"{path} is invalid YAML: {exc}") from exc
         if not isinstance(data, dict):
             raise ScaffoldError(f"{path} must contain a mapping")
+        data_local = data.get("local", False)
+        data_repo = data.get("repo") or (CATALOG_REPO if data_local else None)
         for skill in data.get("skills", []):
             if not isinstance(skill, dict):
                 continue
@@ -407,36 +414,44 @@ def render_component(config):
                     f"catalog_dir '{config.name}' is already registered in {path}"
                 )
             if (
-                data.get("repo") == config.repo
+                data_repo == config.repo
                 and skill.get("path") == config.source_path
             ):
                 raise ScaffoldError(
                     f"source path '{config.source_path}' is already registered in {path}"
                 )
-        if data.get("repo") == config.repo and path != target:
+        if data_repo == config.repo and path != target:
             raise ScaffoldError(f"repo '{config.repo}' is already owned by {path}")
 
     if target.exists():
         data = yaml.safe_load(target.read_text(encoding="utf-8"))
-        if data.get("repo") != config.repo:
+        data_local = data.get("local", False)
+        data_repo = data.get("repo") or (CATALOG_REPO if data_local else None)
+        if data_repo != config.repo:
             raise ScaffoldError(f"{target} repo does not match '{config.repo}'")
         if data.get("ref", "main") != config.ref:
             raise ScaffoldError(f"{target} ref does not match '{config.ref}'")
-        if data.get("local") is True:
+        if data_local != config.local:
             raise ScaffoldError(
-                f"cannot append a product-owned skill to local component {target}"
+                f"{target} local mode does not match the requested scaffold mode"
             )
         original = target.read_text(encoding="utf-8")
         return target, append_component_skill(original, component_skill_block(config))
 
-    text = (
-        f"name: {yaml_string(config.product_name)}\n"
-        f"repo: {yaml_string(config.repo)}\n"
-        f"ref: {yaml_string(config.ref)}\n"
-        f"description: {yaml_string(config.product_description)}\n"
-        "skills:\n"
-        f"{component_skill_block(config)}"
-    )
+    lines = [f"name: {yaml_string(config.product_name)}"]
+    if config.local:
+        lines.append("local: true")
+    else:
+        lines.extend([
+            f"repo: {yaml_string(config.repo)}",
+            f"ref: {yaml_string(config.ref)}",
+        ])
+    lines.extend([
+        f"description: {yaml_string(config.product_description)}",
+        "skills:",
+        component_skill_block(config).rstrip("\n"),
+    ])
+    text = "\n".join(lines) + "\n"
     return target, text
 
 
@@ -518,18 +533,27 @@ def create_scaffold(config, template_root=TEMPLATE_ROOT):
     print(
         "NEXT: replace every TODO and set skill-card lifecycle to published after review."
     )
-    print(
-        "NEXT: merge the source-repository change before synchronizing this component."
-    )
+    if config.local:
+        print("NEXT: generate the catalog, validate, and submit one SkillHub pull request.")
+    else:
+        print(
+            "NEXT: merge the source-repository change before synchronizing this component."
+        )
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(
-        description="Create a product-owned Skill scaffold and component registration."
+        description="Create a local-first Skill scaffold and component registration."
     )
     parser.add_argument("name", help="globally descriptive lowercase-hyphen skill name")
     parser.add_argument(
-        "--repo", required=True, help="HYGON-AI source repository in owner/name form"
+        "--local",
+        action="store_true",
+        help="create the skill directly in SkillHub (the default when --repo is omitted)",
+    )
+    parser.add_argument(
+        "--repo",
+        help="opt in to a remote HYGON-AI source repository in owner/name form",
     )
     parser.add_argument(
         "--owner", required=True, help="owning team recorded in Skill metadata"
@@ -569,7 +593,9 @@ def parse_args(argv=None):
         help="component description; defaults to the Skill description",
     )
     parser.add_argument(
-        "--source-root", default=".", help="product repository root; defaults to cwd"
+        "--source-root",
+        default=".",
+        help="remote product repository root; ignored for local scaffolds",
     )
     parser.add_argument(
         "--catalog-root",
@@ -591,11 +617,18 @@ def parse_args(argv=None):
 
 
 def config_from_args(args):
-    source_root = Path(args.source_root).resolve()
     catalog_root = Path(args.catalog_root).resolve()
     name = require_text(args.name, "name")
-    repo = require_text(args.repo, "repo")
-    component = require_text(args.component or normalized_component(repo), "component")
+    if args.local and args.repo:
+        raise ScaffoldError("--local and --repo are mutually exclusive")
+    local = args.local or not args.repo
+    repo = CATALOG_REPO if local else require_text(args.repo, "repo")
+    source_root = catalog_root if local else Path(args.source_root).resolve()
+    if local and args.component not in (None, "skillhub"):
+        raise ScaffoldError("local skills use the shared 'skillhub' component")
+    component = "skillhub" if local else require_text(
+        args.component or normalized_component(repo), "component"
+    )
     license_file = resolve_optional_file(
         args.license_file, source_root, ("LICENSE", "LICENSE.txt", "LICENSE.md")
     )
@@ -614,12 +647,20 @@ def config_from_args(args):
         description=require_text(args.description, "description"),
         license_id=require_text(args.license_id, "license"),
         category=require_text(args.category, "category"),
+        local=local,
         component=component,
         product_name=require_text(
-            args.product_name or display_name(component), "product name"
+            args.product_name or ("SkillHub" if local else display_name(component)),
+            "product name",
         ),
         product_description=require_text(
-            args.product_description or args.description, "product description"
+            args.product_description
+            or (
+                "Directly maintained HYGON-AI SkillHub skills."
+                if local
+                else args.description
+            ),
+            "product description",
         ),
         source_root=source_root,
         catalog_root=catalog_root,
