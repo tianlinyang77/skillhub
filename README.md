@@ -1,5 +1,11 @@
 # HYGON-AI Agent Skills
 
+<div align="center">
+
+<img src="assets/banner.gif" alt="HYGON SkillHub: agent skills for HCU, grouped by governed catalog category" width="1200"/>
+
+</div>
+
 Portable [Agent Skills](https://agentskills.io/specification) for [HYGON-AI](https://github.com/HYGON-AI) software, infrastructure, training, and inference workflows. This repository is the organization-level catalog: product teams own their source skills, while this hub validates, mirrors, and publishes approved versions.
 
 ## Quick start
