@@ -19,11 +19,24 @@ npx skills add HYGON-AI/skillhub --list
 npx skills add HYGON-AI/skillhub
 ```
 
-Install one skill for Codex without prompts:
+Install one skill into a specific agent without prompts:
 
 ```bash
-npx skills add HYGON-AI/skillhub --skill skillhub-contributor --agent codex --yes
+npx skills add HYGON-AI/skillhub --skill skillhub-contributor --agent claude-code --yes
 ```
+
+Pass `--agent` more than once to install into several agents, or `--agent '*'`
+for every agent the CLI detects:
+
+```bash
+npx skills add HYGON-AI/skillhub --skill skillhub-contributor \
+  --agent claude-code --agent codex --agent cursor --yes
+```
+
+The pinned CLI recognizes `claude-code`, `codex`, `cursor`, `windsurf`,
+`gemini-cli`, `opencode`, `zed`, `cline`, `roo`, `kilo`, `amp`, `continue`,
+`crush`, `goose`, `trae`, `codebuddy`, `qwen-code`, `antigravity` and `eve`.
+Skills in this catalog are portable and are not written for one agent.
 
 ## Add a skill
 
