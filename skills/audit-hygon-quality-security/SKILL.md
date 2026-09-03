@@ -1,7 +1,7 @@
 ---
 name: audit-hygon-quality-security
-description: Run a whole-repository HYGON quality and security audit against an exact committed Git ref and generate one Chinese developer remediation report. Require derivative repositories to declare an immutable upstream baseline and scan both baseline and target with identical pinned tools so new or regressed HYGON lint is separated from inherited upstream debt; keep full-tree security safeguards. Use for pre-release Gitleaks, Trivy, Semgrep, forbidden identity, Git abnormal-file, Ruff, ShellCheck, actionlint, yamllint, Lizard, and optional C/C++/CUDA checks. Do not use for license/provenance or HCU/AMD wording audits.
-license: LicenseRef-HYGON-Internal
+description: Assess a fixed Git revision for release-readiness quality and security issues, compare against a declared baseline when needed, and generate a concise Chinese remediation report. Use before release to review code quality, dependency risk, workflow integrity, and secret exposure.
+license: Apache-2.0
 ---
 
 # HYGON Quality and Security Audit

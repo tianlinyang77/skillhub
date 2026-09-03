@@ -1,7 +1,7 @@
 ---
 name: audit-hygon-open-source
-description: Audit a complete private fork, a fixed-upstream submodule plus external patch repository, a standalone upstream overlay or patch package, or a formally declared HYGON-original repository, and generate Chinese remediation evidence. Onboard an original repository without upstream metadata, but require the upstream repository URL, at least one upstream branch or Tag, and the exact 40-character baseline Commit before scanning any derivative repository. Use for centralized whole-repository open-source compliance and complete reachable Git history metadata audits, including MIT, BSD-3-Clause, and Apache-2.0 obligations, Copyright and SPDX headers, LICENSE/NOTICE/README, third-party provenance, sugon/rogon identity blockers, DCU Commit-message review, file modes, symlinks, Gitlinks, and advisory commit-log checks. Repository-local GitHub workflows are outside the default scan scope. Do not use for HCU/AMD runtime wording, CVE, SAST, secrets, vulnerabilities, or code-quality scanning.
-license: LicenseRef-HYGON-Internal
+description: Assess repository release readiness by reviewing licensing, notices, source provenance, file metadata, and commit history. Use when preparing a fixed Git revision for distribution or generating a concise Chinese remediation report.
+license: Apache-2.0
 ---
 
 # Audit HYGON Open Source

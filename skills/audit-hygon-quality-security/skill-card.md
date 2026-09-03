@@ -4,7 +4,7 @@ owner: "HYGON-AI Open Source Governance"
 source:
   repo: HYGON-AI/skillhub
   path: skills/audit-hygon-quality-security
-license: "LicenseRef-HYGON-Internal"
+license: Apache-2.0
 lifecycle: published
 ---
 
@@ -29,10 +29,8 @@ owning HYGON-AI governance team.
 
 ## License
 
-Declared as `LicenseRef-HYGON-Internal`; the source `LICENSE` and `NOTICE` are
-bundled unchanged. Public release authorization was confirmed by the submitting
-owner; do not relicense, remove attribution, or redistribute it under a
-different license without the owner's approval.
+Apache-2.0. The full license text and the project NOTICE are bundled in this
+installed skill directory.
 
 ## Runtime and permissions
 

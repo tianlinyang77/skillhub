@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Hygon Information Technology Co., Ltd.
-# SPDX-License-Identifier: LicenseRef-HYGON-Internal
+# SPDX-License-Identifier: Apache-2.0
 interface:
   display_name: "HYGON 开源治理与历史扫描"
-  short_description: "扫描许可证、来源、文件头和完整 Git 历史元数据"
-  default_prompt: "使用 $audit-hygon-open-source 先确认原创或二次开发模式；二次开发需核实上游仓库、分支和基线 Commit，再对固定目标 Commit 执行开源合规扫描。"
+  short_description: "审查发布所需的许可证、来源、文件元数据和提交历史"
+  default_prompt: "使用 $audit-hygon-open-source 审查固定 Git 提交的许可证、来源、文件元数据和提交历史，并生成中文整改报告。"

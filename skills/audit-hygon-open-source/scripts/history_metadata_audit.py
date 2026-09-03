@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Hygon Information Technology Co., Ltd.
-# SPDX-License-Identifier: LicenseRef-HYGON-Internal
+# SPDX-License-Identifier: Apache-2.0
 """Audit every reachable Git commit's identity, subject, and body metadata."""
 
 from __future__ import print_function
