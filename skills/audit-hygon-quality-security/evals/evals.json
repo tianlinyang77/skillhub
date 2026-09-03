@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "skill": "audit-hygon-quality-security",
+  "evaluations": [
+    {
+      "id": "scan-derivative-quality-security",
+      "skill_should_trigger": true,
+      "prompt": "对已登记的二次开发仓库 release Commit 做发布前质量和安全扫描，并与固定上游基线比较后生成中文整改报告。",
+      "expected_behavior": [
+        "Require a fixed 40-character upstream baseline and scan target and baseline with the same pinned tool configuration.",
+        "Keep inherited lint separate from introduced or regressed findings while retaining full-tree safeguards for secrets and forbidden identities.",
+        "Treat an unavailable scanner or unreadable vulnerability database as an invalid scan rather than a passing result."
+      ]
+    },
+    {
+      "id": "scan-original-quality-security",
+      "skill_should_trigger": true,
+      "prompt": "这是 HYGON 原创仓库。请固定到 main 的 Commit，执行 Gitleaks、Trivy、Semgrep、Ruff、ShellCheck 和 actionlint 的全仓扫描。",
+      "expected_behavior": [
+        "Use original-repository mode without a baseline and return one report path with a concise conclusion.",
+        "Redact secret evidence and do not include raw scanner JSON in the developer report."
+      ]
+    },
+    {
+      "id": "scan-non-ancestor-baseline",
+      "skill_should_trigger": true,
+      "prompt": "仓库历史已经压平，但本地仍有官方上游的固定 Commit。请把该非祖先 Commit 作为基线完成双层质量安全扫描。",
+      "expected_behavior": [
+        "Allow the official fixed non-ancestor baseline only when it exists locally and keep it protected from garbage collection.",
+        "Classify findings as introduced, regressed, inherited, or resolved."
+      ]
+    },
+    {
+      "id": "license-provenance-audit",
+      "skill_should_trigger": false,
+      "prompt": "检查 Apache-2.0 文件头、第三方来源和 NOTICE 是否满足开源合规要求。"
+    },
+    {
+      "id": "runtime-platform-wording",
+      "skill_should_trigger": false,
+      "prompt": "检查 HCU、AMD 和 XGMI 的运行时可见文案。"
+    }
+  ]
+}

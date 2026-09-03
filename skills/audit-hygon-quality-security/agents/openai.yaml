@@ -1,0 +1,6 @@
+# Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+# SPDX-License-Identifier: LicenseRef-HYGON-Internal
+interface:
+  display_name: "HYGON 全仓质量安全扫描"
+  short_description: "固定 Commit 执行全仓安全与上游基线增量质量扫描"
+  default_prompt: "使用 $audit-hygon-quality-security 对已登记仓库执行全仓安全扫描；二次开发仓库同时对比固定上游基线并生成中文整改报告。"

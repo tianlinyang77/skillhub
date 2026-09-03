@@ -80,7 +80,7 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 | Product | Description | Skills |
 |---|---|---|
-| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
+| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`audit-hygon-open-source`](skills/audit-hygon-open-source), [`audit-hygon-quality-security`](skills/audit-hygon-quality-security), [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
 
 <!-- catalog:end -->
 
@@ -88,13 +88,20 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 <!-- categories:start -->
 
-2 skills across 2 categories.
+4 skills across 3 categories.
 
 ### Developer Tools
 
 | Skill | Product | Description |
 |---|---|---|
 | [`skillhub-contributor`](skills/skillhub-contributor) | SkillHub | Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures. |
+
+### Governance and Compliance
+
+| Skill | Product | Description |
+|---|---|---|
+| [`audit-hygon-open-source`](skills/audit-hygon-open-source) | SkillHub | Audit a complete private fork, a fixed-upstream submodule plus external patch repository, a standalone upstream overlay or patch package, or a formally declared HYGON-original repository, and generate Chinese remediation evidence. Onboard an original repository without upstream metadata, but require the upstream repository URL, at least one upstream branch or Tag, and the exact 40-character baseline Commit before scanning any derivative repository. Use for centralized whole-repository open-source compliance and complete reachable Git history metadata audits, including MIT, BSD-3-Clause, and Apache-2.0 obligations, Copyright and SPDX headers, LICENSE/NOTICE/README, third-party provenance, sugon/rogon identity blockers, DCU Commit-message review, file modes, symlinks, Gitlinks, and advisory commit-log checks. Repository-local GitHub workflows are outside the default scan scope. Do not use for HCU/AMD runtime wording, CVE, SAST, secrets, vulnerabilities, or code-quality scanning. |
+| [`audit-hygon-quality-security`](skills/audit-hygon-quality-security) | SkillHub | Run a whole-repository HYGON quality and security audit against an exact committed Git ref and generate one Chinese developer remediation report. Require derivative repositories to declare an immutable upstream baseline and scan both baseline and target with identical pinned tools so new or regressed HYGON lint is separated from inherited upstream debt; keep full-tree security safeguards. Use for pre-release Gitleaks, Trivy, Semgrep, forbidden identity, Git abnormal-file, Ruff, ShellCheck, actionlint, yamllint, Lizard, and optional C/C++/CUDA checks. Do not use for license/provenance or HCU/AMD wording audits. |
 
 ### Performance and Profiling
 

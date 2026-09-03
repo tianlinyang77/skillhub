@@ -3,6 +3,30 @@
   "organization": "HYGON-AI",
   "skills": [
     {
+      "name": "audit-hygon-open-source",
+      "description": "Audit a complete private fork, a fixed-upstream submodule plus external patch repository, a standalone upstream overlay or patch package, or a formally declared HYGON-original repository, and generate Chinese remediation evidence. Onboard an original repository without upstream metadata, but require the upstream repository URL, at least one upstream branch or Tag, and the exact 40-character baseline Commit before scanning any derivative repository. Use for centralized whole-repository open-source compliance and complete reachable Git history metadata audits, including MIT, BSD-3-Clause, and Apache-2.0 obligations, Copyright and SPDX headers, LICENSE/NOTICE/README, third-party provenance, sugon/rogon identity blockers, DCU Commit-message review, file modes, symlinks, Gitlinks, and advisory commit-log checks. Repository-local GitHub workflows are outside the default scan scope. Do not use for HCU/AMD runtime wording, CVE, SAST, secrets, vulnerabilities, or code-quality scanning.",
+      "category": "Governance and Compliance",
+      "product": "SkillHub",
+      "source": {
+        "repo": "HYGON-AI/skillhub",
+        "ref": "main",
+        "path": "skills/audit-hygon-open-source"
+      },
+      "catalog_path": "skills/audit-hygon-open-source"
+    },
+    {
+      "name": "audit-hygon-quality-security",
+      "description": "Run a whole-repository HYGON quality and security audit against an exact committed Git ref and generate one Chinese developer remediation report. Require derivative repositories to declare an immutable upstream baseline and scan both baseline and target with identical pinned tools so new or regressed HYGON lint is separated from inherited upstream debt; keep full-tree security safeguards. Use for pre-release Gitleaks, Trivy, Semgrep, forbidden identity, Git abnormal-file, Ruff, ShellCheck, actionlint, yamllint, Lizard, and optional C/C++/CUDA checks. Do not use for license/provenance or HCU/AMD wording audits.",
+      "category": "Governance and Compliance",
+      "product": "SkillHub",
+      "source": {
+        "repo": "HYGON-AI/skillhub",
+        "ref": "main",
+        "path": "skills/audit-hygon-quality-security"
+      },
+      "catalog_path": "skills/audit-hygon-quality-security"
+    },
+    {
       "name": "skillhub-contributor",
       "description": "Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures.",
       "category": "Developer Tools",
