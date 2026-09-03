@@ -10,6 +10,14 @@
       ]
     },
     {
+      "title": "Governance and Compliance",
+      "description": "HYGON-AI skills for governance and compliance workflows.",
+      "skills": [
+        "audit-hygon-open-source",
+        "audit-hygon-quality-security"
+      ]
+    },
+    {
       "title": "Performance and Profiling",
       "description": "HYGON-AI skills for performance and profiling workflows.",
       "skills": [

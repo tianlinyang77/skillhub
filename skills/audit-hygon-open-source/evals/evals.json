@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "skill": "audit-hygon-open-source",
+  "evaluations": [
+    {
+      "id": "audit-derivative-release",
+      "skill_should_trigger": true,
+      "prompt": "审计一个准备开源发布的二次开发仓库：它有固定的上游仓库、release 分支和 40 位基线 Commit。请生成中文合规整改报告。",
+      "expected_behavior": [
+        "Require a registered repository configuration with a fixed upstream Commit and at least one upstream branch or tag.",
+        "Run only against the resolved committed target and keep the repository worktree, refs, remotes, index, and configuration unchanged.",
+        "Report license, provenance, header, notice, and reachable-history outcomes without invoking vulnerability or SAST scanners."
+      ]
+    },
+    {
+      "id": "audit-original-repository",
+      "skill_should_trigger": true,
+      "prompt": "这是 HYGON 原创仓库，没有上游。请对 main 当前 Commit 做全仓开源合规检查，并给出开发整改清单。",
+      "expected_behavior": [
+        "Use original-repository mode and do not invent upstream metadata.",
+        "Require the target to resolve to a full Commit and write one Chinese remediation report outside the repository."
+      ]
+    },
+    {
+      "id": "audit-history-metadata",
+      "skill_should_trigger": true,
+      "prompt": "在发布前对这个完整 Git 仓库的全部可达提交检查 sugon、rogon 和 dcu 身份或提交消息字段，并给出历史审计证据。",
+      "expected_behavior": [
+        "Reject a shallow clone for complete-history conclusions.",
+        "Treat sugon and rogon as blockers, dcu as review-only, and do not rewrite history."
+      ]
+    },
+    {
+      "id": "quality-security-scan",
+      "skill_should_trigger": false,
+      "prompt": "请运行 Gitleaks、Trivy、Semgrep 和 Ruff，对该仓库做漏洞与代码质量扫描。"
+    },
+    {
+      "id": "runtime-platform-wording",
+      "skill_should_trigger": false,
+      "prompt": "审计运行时 HCU/AMD 平台命名和 XGMI 文案。"
+    }
+  ]
+}
