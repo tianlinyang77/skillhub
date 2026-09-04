@@ -38,7 +38,7 @@
     {
       "id": "runtime-platform-wording",
       "skill_should_trigger": false,
-      "prompt": "检查 HCU、AMD 和 XGMI 的运行时可见文案。"
+      "prompt": "检查特定平台的运行时可见文案。"
     }
   ]
 }
