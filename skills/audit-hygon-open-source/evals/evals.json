@@ -24,10 +24,10 @@
     {
       "id": "audit-history-metadata",
       "skill_should_trigger": true,
-      "prompt": "在发布前对这个完整 Git 仓库的全部可达提交检查 sugon、rogon 和 dcu 身份或提交消息字段，并给出历史审计证据。",
+      "prompt": "在发布前对这个完整 Git 仓库的全部可达提交按批准策略检查身份或提交消息字段，并给出历史审计证据。",
       "expected_behavior": [
         "Reject a shallow clone for complete-history conclusions.",
-        "Treat sugon and rogon as blockers, dcu as review-only, and do not rewrite history."
+        "Apply the approved blocking and review terms without rewriting history."
       ]
     },
     {
@@ -38,7 +38,7 @@
     {
       "id": "runtime-platform-wording",
       "skill_should_trigger": false,
-      "prompt": "审计运行时 HCU/AMD 平台命名和 XGMI 文案。"
+      "prompt": "审计特定平台的运行时可见文案。"
     }
   ]
 }

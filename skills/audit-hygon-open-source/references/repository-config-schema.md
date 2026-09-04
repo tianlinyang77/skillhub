@@ -25,7 +25,6 @@ upstream:
 policy:
   base: hygon-open-source-v1.7
   overlay: centralized-skill
-platform_profile: hcu
 report_language: zh-CN
 ```
 
@@ -39,7 +38,7 @@ Required invariants:
 - Use an overlay name only when the corresponding YAML exists.
 - Resolve `target_ref` inside the private clone without checking it out.
 - Record `report_ref` as the human-readable branch label whenever `target_ref` is fixed to an exact Commit for immutable evidence. It controls only the report filename and metadata label; the exact scanned object remains `target_ref`. The legacy `target_branch` field is accepted only during migration and must not conflict with `report_ref`.
-- Treat `platform_profile: hcu` only as repository classification metadata. It does not enable HCU/AMD runtime wording checks; run `$audit-hygon-platform` separately for platform conclusions.
+- Keep platform-specific classification metadata and runtime wording rules in the private policy overlay; they are outside this Skill's public configuration schema.
 
 Fixed-upstream submodule plus external patch mode:
 
@@ -62,7 +61,6 @@ submodule_patch:
 policy:
   base: hygon-open-source-v1.7
   overlay: centralized-skill
-platform_profile: hcu
 report_language: zh-CN
 ```
 
@@ -95,7 +93,6 @@ upstream:
 policy:
   base: hygon-open-source-v1.7
   overlay: centralized-skill
-platform_profile: hcu
 report_language: zh-CN
 ```
 
@@ -125,7 +122,6 @@ original:
 policy:
   base: hygon-open-source-v1.7
   overlay: centralized-skill
-platform_profile: hcu
 report_language: zh-CN
 ```
 
