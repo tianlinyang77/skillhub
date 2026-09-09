@@ -7,8 +7,8 @@ For the step-by-step contributor path, see
 
 1. Run `python3 scripts/contribute.py new <skill-name>` or import one existing
    package with `python3 scripts/contribute.py import <path>`.
-2. Review its Skill Card, attribution and license material, then set its
-   lifecycle to `published`.
+2. Review its Skill Card, runtime requirements, attribution and applicable license
+   material. Its lifecycle already defaults to `published`; this is not approval.
 3. Run `python3 scripts/contribute.py check` to regenerate metadata and run all
    catalog checks.
 4. Merge one protected pull request carrying content, registration and
@@ -31,12 +31,12 @@ Synchronization runs on manual dispatch only. Admitting the first remote
 component requires an explicit decision on whether to restore scheduled
 synchronization and at what frequency.
 
-## Catalog-owned skill
+## Optional catalog-owned prototype
 
-Catalog ownership is reserved for SkillHub-wide workflows. Start in
-`staging/<skill-name>/SKILL.md.candidate`, use the contribution templates, and
-promote to `skills/` with a real `SKILL.md` only when the same evidence required
-from product skills is present. `SKILL.md` is forbidden below `staging/` so
+Any directly maintained skill can use the normal local path above. For an
+unfinished prototype, optionally start in `staging/<skill-name>/SKILL.md.candidate`
+and promote to `skills/` when the publication contract is satisfied.
+`SKILL.md` is forbidden below `staging/` so
 full-depth discovery cannot publish a candidate.
 
 ## Generated content

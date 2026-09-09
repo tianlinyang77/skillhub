@@ -172,6 +172,118 @@ class ContributionTests(unittest.TestCase):
             self.assertEqual(code, 0, output)
             self.assertEqual(before, self.snapshot(root))
 
+    def test_import_preserves_existing_runtime_without_prompting(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(temporary)
+            source = self.source_skill(temporary)
+            runtime = "HCU and hipprof; no network; read-only trace input."
+            original_card = (
+                f"# Skill Card\n\n## Runtime and permissions\n\n{runtime}\n\n"
+                "## Validation\nMeasured a trace conversion; no hardware run.\n\n"
+                "## Custom notes\n\nKeep this note.\n"
+            )
+            (source / "skill-card.md").write_text(
+                original_card, encoding="utf-8",
+            )
+            before = self.snapshot(source)
+            with mock.patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
+                code, output = self.invoke(["import", str(source), "--category", "Developer Tools"], root)
+            self.assertEqual(code, 0, output)
+            card = (root / "skills/imported-example/skill-card.md").read_text(encoding="utf-8")
+            self.assertIn(runtime, card)
+            self.assertIn("Keep this note.", card)
+            self.assertIn(original_card, card)
+            self.assertEqual(before, self.snapshot(source))
+
+    def test_import_runtime_override_preserves_unrelated_card_content(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(temporary)
+            source = self.source_skill(temporary)
+            (source / "skill-card.md").write_text(
+                "# Skill Card\n\n## Runtime and permissions\n\nOld requirements.\n\n## Custom notes\n\nKeep this note.\n",
+                encoding="utf-8",
+            )
+            before = self.snapshot(source)
+            code, output = self.invoke([
+                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                "--runtime-permissions", "Updated requirements; no network.",
+            ], root)
+            self.assertEqual(code, 0, output)
+            card = (root / "skills/imported-example/skill-card.md").read_text(encoding="utf-8")
+            self.assertIn("Updated requirements; no network.", card)
+            self.assertNotIn("Old requirements.", card)
+            self.assertIn("Keep this note.", card)
+            self.assertEqual(before, self.snapshot(source))
+
+    def test_import_migrates_only_known_legacy_card_placeholders(self):
+        from scripts.import_skill import LEGACY_VALIDATION_PLACEHOLDERS, LEGACY_ORIGIN_PLACEHOLDER
+        for actual_validation in ("", "Measured one log conversion; model profiling not exercised.\n"):
+            with self.subTest(actual_validation=actual_validation), tempfile.TemporaryDirectory() as temporary:
+                root = self.fixture(temporary)
+                source = self.source_skill(temporary)
+                (source / "skill-card.md").write_text(
+                    "# Skill Card\n\n## Runtime and permissions\n\nTODO: Record runtime requirements and permissions.\n\n"
+                    "## Validation\n\n" + "\n".join(sorted(LEGACY_VALIDATION_PLACEHOLDERS)) + "\n" + actual_validation
+                    + "\n## Local catalog import\n\n" + LEGACY_ORIGIN_PLACEHOLDER + "\nOriginal author: Example Team.\n",
+                    encoding="utf-8",
+                )
+                before = self.snapshot(source)
+                code, output = self.invoke([
+                    "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                    "--runtime-permissions", "see SKILL.md",
+                ], root)
+                self.assertEqual(code, 0, output)
+                card = (root / "skills/imported-example/skill-card.md").read_text(encoding="utf-8")
+                self.assertNotIn("TODO", card)
+                self.assertIn("[SKILL.md](SKILL.md)", card)
+                self.assertIn("Original author: Example Team.", card)
+                self.assertEqual("## Validation" in card, bool(actual_validation))
+                if actual_validation:
+                    self.assertIn(actual_validation.strip(), card)
+                self.assertEqual(before, self.snapshot(source))
+
+    def test_import_rejects_unknown_placeholders_before_writing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(temporary)
+            source = self.source_skill(temporary)
+            (source / "skill-card.md").write_text(
+                "# Skill Card\n\n## Validation\n\nTODO: Review custom behavior.\n", encoding="utf-8",
+            )
+            before = self.snapshot(root)
+            code, output = self.invoke([
+                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+            ], root)
+            self.assertEqual(code, 1, output)
+            self.assertIn("unresolved template placeholder", output)
+            self.assertEqual(before, self.snapshot(root))
+
+    def test_invalid_component_lists_fail_cleanly_without_writes(self):
+        for skills_value in (None, [], "not-a-list", [None]):
+            for command in ("new", "import"):
+                with self.subTest(skills=skills_value, command=command), tempfile.TemporaryDirectory() as temporary:
+                    root = self.fixture(temporary)
+                    source = self.source_skill(temporary)
+                    component = root / "components.d/skillhub.yml"
+                    component.write_text(yaml.safe_dump({
+                        "name": "SkillHub", "local": True, "description": "Fixture.", "skills": skills_value,
+                    }), encoding="utf-8")
+                    before = self.snapshot(root)
+                    args = ["import", str(source)] if command == "import" else [
+                        "new", "example-tool", "--owner", "Example Team", "--description", "Analyze tool logs.",
+                    ]
+                    code, output = self.invoke(args + ["--category", "Developer Tools", "--non-interactive"], root)
+                    self.assertEqual(code, 1, output)
+                    self.assertIn(str(component), output)
+                    self.assertNotIn("Traceback", output)
+                    self.assertEqual(before, self.snapshot(root))
+
+    def test_eof_help_does_not_request_a_license(self):
+        with mock.patch("builtins.input", side_effect=EOFError):
+            with self.assertRaises(contribute.ContributionError) as error:
+                contribute.prompt_value("Maintaining team")
+        self.assertNotIn("--license", str(error.exception))
+        self.assertIn("--runtime-permissions", str(error.exception))
+
     def test_import_without_license_file_preserves_declared_license_and_origin(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = self.fixture(temporary)

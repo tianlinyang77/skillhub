@@ -2,7 +2,7 @@
 name: skillhub-contributor
 description: Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures.
 license: Apache-2.0
-compatibility: Requires Python 3.11+ and Git. Network access is needed for reference checks or synchronizing an opt-in remote GitHub repository.
+compatibility: Requires a SkillHub checkout, Python 3.11+, Git, Node.js/npm (CI uses Node 22), and requirements-dev.txt dependencies. Dependency setup, CLI discovery and opt-in remote checks may require network access.
 metadata:
   author: HYGON-AI
   version: "1.3.0"
@@ -33,16 +33,16 @@ product repository or inside this installed skill.
 
 ## Workflow
 
-1. Confirm the owning team, the mode, license, and intended user prompts.
-2. For a new local skill, run `python3 scripts/contribute.py new <name>` from the SkillHub checkout. For one existing local directory, run `python3 scripts/contribute.py import <path>`; it copies the package without changing or executing the source and leaves its card at `staging`. Use `scripts/new_skill.py --repo` only when a product team explicitly chooses ongoing remote synchronization. Do not require or generate a separate eval dataset.
+1. Confirm the owning team, mode, category and intended user prompts. Original local contributions default to root Apache-2.0 without a license prompt or duplicate LICENSE; preserve existing declarations and legal notices.
+2. For a new local skill, run `python3 scripts/contribute.py new <name>` from the SkillHub checkout. For one existing local directory, run `python3 scripts/contribute.py import <path>`; it copies the package without changing or executing the source. Generated cards default to `published`, which is metadata, not review approval or permission to submit. Use `scripts/new_skill.py --repo` only for ongoing remote synchronization.
 3. Use lowercase letters, digits, and hyphens for the directory and frontmatter `name`, and keep the name globally descriptive.
 4. Keep `SKILL.md` focused on procedures the agent cannot infer. Put detailed knowledge in `references/`, deterministic helpers in `scripts/`, and output material in `assets/`. Do not nest another `SKILL.md`.
-5. Complete the scaffold sections in `SKILL.md` and `skill-card.md`, record actual validation and limitations, then set the Skill Card lifecycle to `published`.
+5. Complete scaffold content and review runtime requirements and permissions. Import reuses an existing authored runtime section unless `--runtime-permissions` overrides it; otherwise it prompts or links to `SKILL.md`. No Validation section or eval dataset is required. Preserve real validation notes and attribution; cleanup removes only recognized old template placeholders.
 6. Review the generated `components.d/skillhub.yml` change. The helper registers a local package under its globally unique `catalog_dir` and chosen allowlisted category; do not hand-edit generated catalog files.
 7. Run `python3 scripts/contribute.py check` from the SkillHub root. It regenerates catalog files and runs unit, policy, specification, provenance and normal/full-depth discovery checks without submitting Git changes.
 8. For a remote component only, apply synchronization separately after reviewing destinations, then rerun `contribute.py check`. Remote provenance must prove the ref, resolved commit, source digest, lock entry and published tree agree.
 9. A catalog-owned staging entrypoint must remain `SKILL.md.candidate` until promotion.
-10. Review the diff and use ordinary Git to submit one signed-off pull request. A local skill lands in one PR; a synchronized remote skill also needs one SkillHub PR containing registration, mirror and lock. Require Quality Gate, catalog validation, DCO and maintainer review before merge.
+10. Review the diff and, when the user authorizes submission, use ordinary Git to submit one signed-off pull request. A local skill lands in one PR; a synchronized remote skill also needs one SkillHub PR containing registration, mirror and lock. Require completed Quality Gate, catalog validation, DCO and maintainer review before merge; queued jobs are not passes.
 
 Read [onboarding.md](references/onboarding.md) for the component schema, release checklist, and troubleshooting commands.
 
@@ -51,7 +51,7 @@ Read [onboarding.md](references/onboarding.md) for the component schema, release
 - Never place credentials, internal endpoints, customer data, or unpublished product information in a public skill.
 - Never copy a skill from a private repository into a public catalog until the owning team has approved its public release.
 - Do not edit mirrored files under `skills/` directly. Fix them in the source repository and synchronize again.
-- Do not claim remote provenance for a local skill. A local skill has no lock entry and no content digest; its integrity rests on review, protected branches, required checks and DCO.
+- Do not claim remote provenance for a local skill. It has no lock entry or content digest; protected branches and required reviews/checks are effective only when administrators configure them.
 - Do not treat `staging/`, templates, CLI discovery, or a routing-only evaluation as published behavior evidence.
 - Do not broaden tool permissions beyond what the skill workflow actually requires.
 - Treat scripts as executable supply-chain content: review them, pin dependencies where practical, and test them before publication.

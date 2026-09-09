@@ -23,6 +23,9 @@ Do not select a required status-check name until that check has run once on the
 publishing repository. Reverify the selected names after renaming a workflow or
 job.
 
+Check completion matters: a queued or running job is not a pass, and successful
+local `contribute.py check` results do not satisfy GitHub required checks.
+
 ## Repository security and contribution settings
 
 - Enable web-based commit sign-off so browser-created commits follow the DCO
@@ -40,6 +43,10 @@ job.
 ## Release verification
 
 ### External import automation setup
+
+The quality runner and required checks below are needed for ordinary human-authored
+PRs too. A GitHub App is needed only for synchronization automation to push a branch
+and open a PR; contributors using ordinary Git do not need App credentials.
 
 1. Install a GitHub App on this catalog only, with Contents and Pull requests
    read/write permissions. Set repository variable `SKILLHUB_APP_ID` and secret
@@ -66,8 +73,8 @@ These are deployment prerequisites, not settings enabled by committing YAML.
 Before announcing the catalog endpoint, an administrator records evidence that:
 
 1. direct pushes to `main` cannot bypass review;
-2. a pull request cannot merge while either Python validation job or `dco` is
-   failing;
+2. a pull request cannot merge while either Python validation job, `dco`, or the
+   Quality Gate summary is missing, queued, running or failing;
 3. CODEOWNERS review is requested for workflows, validators, templates, source
    registrations, and published skills;
 4. a private vulnerability report can be submitted without opening a public

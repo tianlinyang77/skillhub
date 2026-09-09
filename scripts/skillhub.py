@@ -427,6 +427,14 @@ def validate_skill_tree(skill_dir, root=ROOT):
     return errors
 
 
+def skill_card_section(body, title):
+    """Locate a level-two card section without consuming the next heading."""
+    return re.search(
+        r"^## {}[ \t]*\r?(?:\n|\Z)(?P<content>.*?)(?=^#{{1,2}}[ \t]+|\Z)".format(re.escape(title)),
+        body, re.MULTILINE | re.DOTALL,
+    )
+
+
 def validate_skill_card(path, record, root=ROOT):
     errors = []
     rel = record["dir"].relative_to(root)
@@ -474,6 +482,10 @@ def validate_skill_card(path, record, root=ROOT):
         if not re.search(r"^## {}\s*$".format(re.escape(heading)), body, re.MULTILINE):
             errors.append("{}: missing required heading '## {}'".format(
                 path.relative_to(root), heading))
+    runtime = skill_card_section(body, "Runtime and permissions")
+    if runtime and not runtime.group("content").strip():
+        errors.append("{}: Runtime and permissions must contain text or a SKILL.md reference".format(
+            path.relative_to(root)))
     if re.search(r"\b(?:TODO|TBD)\b|Replace with", body, re.IGNORECASE):
         errors.append("{}: unresolved template placeholder".format(path.relative_to(root)))
     return errors

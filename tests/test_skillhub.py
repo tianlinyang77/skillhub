@@ -435,6 +435,15 @@ Validated.
                 "metadata": {"license": "Apache-2.0"},
             }
             self.assertEqual(validate_skill_card(path, record, root), [])
+            original = path.read_text(encoding="utf-8")
+            # Validation is optional, but runtime requirements cannot be empty.
+            without_validation = original.split("## Validation")[0]
+            path.write_text(without_validation, encoding="utf-8")
+            self.assertEqual(validate_skill_card(path, record, root), [])
+            path.write_text(without_validation.replace("None.", "  \n"), encoding="utf-8")
+            self.assertTrue(any("must contain text" in error for error in validate_skill_card(path, record, root)))
+            path.write_text(without_validation.replace("None.", "See [SKILL.md](SKILL.md)."), encoding="utf-8")
+            self.assertEqual(validate_skill_card(path, record, root), [])
 
 
 class PublicationContractTests(unittest.TestCase):

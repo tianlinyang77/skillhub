@@ -18,8 +18,8 @@ here. Generated skill synchronization updates may be grouped by release.
 - Production repository-settings baseline for protected reviews, required
   checks, DCO, private vulnerability reporting, and synchronization authority.
 - Non-discoverable contribution templates.
-- Product-owned Skill generator for deterministic naming, placeholder
-  replacement, LICENSE and NOTICE copying, and component registration.
+- Skill generator for deterministic naming, placeholder replacement, optional
+  LICENSE and NOTICE copying, and local or opt-in remote component registration.
 - Optional reference scaffolds that are linked conditionally from generated
   `SKILL.md` entrypoints.
 
@@ -29,6 +29,17 @@ here. Generated skill synchronization updates may be grouped by release.
   commands collect runtime requirements and permissions via prompt or
   `--runtime-permissions`; a SKILL.md reference is allowed. The Validation
   section is no longer required or generated. Catalog checks remain mandatory.
+- Imports preserve authored runtime requirements unless explicitly overridden,
+  remove only recognized legacy Validation/origin placeholders, and reject other
+  unfinished card content before writing a destination or registration. Existing
+  real validation notes and attribution remain intact.
+- Empty runtime sections are rejected; a linked `SKILL.md` explanation is allowed.
+  Malformed or empty shared component skill lists now produce actionable errors
+  instead of a traceback or silently replacing registrations.
+- Contribution documentation, PR checklist, templates and the bundled contributor
+  skill now match the local `new`/`import` -> `check` -> ordinary Git workflow.
+  Generated `published` metadata does not replace review or authorize submission;
+  local checks do not establish runtime correctness or configured GitHub enforcement.
 - Local directory imports now assume original contributions: absent license
   declarations default to Apache-2.0, with no license or source URL prompt.
   Contributors must have publishing rights; existing declarations and legal
@@ -43,14 +54,14 @@ here. Generated skill synchronization updates may be grouped by release.
 - Removed the mandatory `evals/evals.json` dataset, its schema/count validation,
   scaffold generation, existing catalog forms and evaluation-contract document.
   No model evaluation runner existed; static dataset acceptance was not behavior
-  evidence. Record actual validation and limitations in the Skill Card instead.
+  evidence. No replacement Validation section is required in the Skill Card.
   Optional upstream evaluation resources remain allowed and synchronized intact.
 
 - Remote components, scaffolds and admission exceptions accept any GitHub
   owner/repository. Local identity and all package/provenance gates remain enforced.
 - External imports preserve upstream authorship and licensing and require a
   catalog maintainer; original content need not be relabeled as an HCU adaptation.
-- PRs call the pinned HYGON Quality Gate. Automatic sync uses a catalog-scoped
+- PRs call the pinned HYGON Quality Gate. Manually dispatched sync uses a catalog-scoped
   GitHub App token so bot PRs trigger checks; App credentials, an isolated quality
   runner and required branch checks must be configured before production use.
 
@@ -59,11 +70,12 @@ here. Generated skill synchronization updates may be grouped by release.
   and correctness debugging have a dedicated category.
 - Ambiguous bare catalog names, residual `.template` files and unresolved
   scaffold placeholders are rejected before publication.
-- Pull-request validation runs on Python 3.11 and 3.12, while DCO and scheduled
+- Pull-request validation runs on Python 3.11 and 3.12, while DCO and manual
   synchronization use the declared minimum Python 3.11 runtime.
 - The product Skill generator warns about obvious standard-license declaration
   mismatches without replacing mandatory human license and NOTICE review.
-- Published skills require a skill card with actual validation and limitations.
+- Published skills require a Skill Card with source, owner, license, published
+  lifecycle and nonempty runtime/permissions information or a `SKILL.md` reference.
 - Nested `SKILL.md` dependencies are rejected in the flat catalog.
 - Relative Markdown links are validated recursively across each skill package.
 - Remote lock entries carry and verify the source-tree SHA-256 digest.

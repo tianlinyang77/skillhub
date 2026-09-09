@@ -33,6 +33,15 @@ PORTABLE_FRONTMATTER_FIELDS = frozenset((
     "metadata",
     "allowed-tools",
 ))
+LEGACY_RUNTIME_PLACEHOLDERS = frozenset((
+    "TODO: Record runtime requirements and permissions.",
+    "TODO: List required operating systems, hardware, network access, tools, and write surfaces.",
+))
+LEGACY_VALIDATION_PLACEHOLDERS = frozenset((
+    "TODO: Record representative validation and known limitations; importing files is not a behavior test.",
+    "TODO: Describe representative validation evidence and its limitations.",
+))
+LEGACY_ORIGIN_PLACEHOLDER = "TODO: Record the original repository URL or another publishable origin or attribution."
 
 
 def plain_path(path):
@@ -180,11 +189,31 @@ def select_material(source, explicit, stem):
     return selected.resolve()
 
 
+def clean_legacy_card(body):
+    """Remove only exact retired generator placeholders, not author-written notes."""
+    validation = catalog.skill_card_section(body, "Validation")
+    if validation:
+        original_content = validation.group("content")
+        content = "".join(
+            line for line in original_content.splitlines(keepends=True)
+            if line.strip() not in LEGACY_VALIDATION_PLACEHOLDERS
+        )
+        if content != original_content:
+            heading = body[validation.start():validation.start("content")]
+            replacement = heading + content if content.strip() else ""
+            body = body[:validation.start()] + replacement + body[validation.end():]
+    return "".join(
+        line for line in body.splitlines(keepends=True)
+        if line.strip() != LEGACY_ORIGIN_PLACEHOLDER
+    )
+
+
 def render_card(source, frontmatter, config, upstream):
     path = source / "skill-card.md"
     original, body = (
         read_document(path, optional_header=True) if path.exists() else ({}, "# Skill Card\n")
     )
+    body = clean_legacy_card(body)
     data = dict(original)
     data.setdefault("schema_version", 1)
     data.update(owner=config.owner, license=config.license_id, lifecycle="published")
@@ -198,7 +227,11 @@ def render_card(source, frontmatter, config, upstream):
     }
     for title, content in sections.items():
         if title == "Runtime and permissions":
-            body = re.sub(r"^## Runtime and permissions\s*\n.*?(?=^## |\Z)", "", body, flags=re.MULTILINE | re.DOTALL)
+            section = catalog.skill_card_section(body, title)
+            if section:
+                if section.group("content").strip() != content.strip():
+                    body = body[:section.start()] + f"## {title}\n\n{content}\n\n" + body[section.end():]
+                continue
         if not re.search(rf"^## {re.escape(title)}\s*$", body, re.MULTILINE):
             body += f"\n\n## {title}\n\n{content}\n"
     body += (
@@ -219,7 +252,7 @@ def render_card(source, frontmatter, config, upstream):
 
 
 def validate_prepared(stage_root, config):
-    """Run the existing policy gate on one isolated package; only review TODOs may remain."""
+    """Run the existing policy gate on the complete isolated import."""
     (stage_root / "components.d").mkdir()
     (stage_root / "staging").mkdir()
     generator.write_text(
@@ -241,15 +274,9 @@ def validate_prepared(stage_root, config):
     generator.write_text(stage_root / ".skillhub-lock.json", '{"schema_version": 1, "skills": {}}\n')
     generator.write_text(stage_root / "admission-exceptions.yml", "schema_version: 1\nexceptions: []\n")
     errors, warnings, _, _ = catalog.validate_catalog(stage_root)
-    card_path = str(Path(config.source_path) / "skill-card.md")
-    pending = {
-        f"{card_path}: lifecycle must equal 'published'",
-        f"{card_path}: unresolved template placeholder",
-    }
-    blocked = [error for error in errors if error not in pending]
-    if blocked:
+    if errors:
         raise ImportSkillError(
-            "Imported package needs correction before copying:\n" + "\n".join(blocked)
+            "Imported package needs correction before copying:\n" + "\n".join(errors)
         )
     for warning in warnings:
         print(f"WARNING: {warning}")
@@ -279,13 +306,16 @@ def import_local_skill(args, root, prompt):
     if source.is_relative_to(destination.resolve()) or destination.resolve().is_relative_to(source):
         raise ImportSkillError("Source and catalog destination must not overlap")
     if destination.exists():
-        raise ImportSkillError(f"Refusing to overwrite existing destination: {destination}")
+        raise ImportSkillError(
+            f"Refusing to overwrite existing destination: {destination}. "
+            "Edit the existing local copy and run contribute.py check; import is not an update command."
+        )
     for path in (root / "skills", root / "components.d", destination):
         if path.exists() or path.is_symlink():
             plain_path(path)
         if not path.resolve().is_relative_to(root):
             raise ImportSkillError(f"{path}: destination escapes the catalog")
-    existing, _ = (
+    existing, existing_body = (
         read_document(source / "skill-card.md", optional_header=True)
         if (source / "skill-card.md").exists() else ({}, "")
     )
@@ -313,13 +343,19 @@ def import_local_skill(args, root, prompt):
     license_file = select_material(source, args.license_file, "LICENSE")
     upstream = args.upstream
     notice_file = select_material(source, args.notice_file, "NOTICE")
+    runtime_section = catalog.skill_card_section(existing_body, "Runtime and permissions")
+    existing_runtime = runtime_section.group("content").strip() if runtime_section else None
+    if existing_runtime in LEGACY_RUNTIME_PLACEHOLDERS:
+        existing_runtime = None
     runtime_permissions = value_or_prompt(
-        args.runtime_permissions or (
+        args.runtime_permissions if args.runtime_permissions is not None else existing_runtime or (
             "See [SKILL.md](SKILL.md) for runtime requirements and permissions."
             if args.non_interactive else None
         ),
         "--runtime-permissions", "Runtime requirements and permissions (or enter: see SKILL.md)", args, prompt,
     )
+    if runtime_permissions.casefold() in ("see skill.md", "见 skill.md", "见skill.md"):
+        runtime_permissions = "See [SKILL.md](SKILL.md) for runtime requirements and permissions."
     config = generator.ScaffoldConfig(
         name=name,
         repo=catalog.CATALOG_REPO,

@@ -22,6 +22,11 @@ frontmatter such as `produces` is retained in an **Imported source metadata**
 section of the copied `SKILL.md`, rather than left as an invalid top-level Agent
 Skills field. An existing Skill Card is retained as context but adapted to local
 identity with lifecycle `published`; upstream attribution remains in the card.
+Existing runtime/permission text is reused unless explicitly overridden with
+`--runtime-permissions`; otherwise the command prompts, or records a SKILL.md
+reference in non-interactive mode. Only known retired generator Validation/origin
+placeholders are removed from the copied card. Actual notes are preserved.
+Other unfinished placeholders fail before any registration is written.
 
 If the package does not include license text, no duplicate file is required.
 Local directory imports are intended for your own original contributions. When
@@ -40,6 +45,9 @@ python3 scripts/contribute.py check
 
 Then review the diff and submit one ordinary signed-off pull request. This is a
 local copy, so later upstream changes are not pulled automatically.
+An existing destination is never overwritten; edit that local copy and run
+`contribute.py check` to update it. No Validation form or manual lifecycle
+change is required, and the metadata value does not bypass PR checks or review.
 
 ## Opt in to remote synchronization
 

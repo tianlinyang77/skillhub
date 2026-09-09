@@ -32,17 +32,19 @@ Apache-2.0. The full license text is bundled in this installed skill directory.
 
 ## Runtime and permissions
 
-Requires a checkout of SkillHub, Python 3.11 or newer, Git, and repository
-write access only when the user asks to apply or submit changes. Network access
-is needed only for the opt-in remote synchronization path. Validation and
-synchronization preview are read-only.
+Requires a checkout of SkillHub, Python 3.11+, Git, Node.js/npm (CI uses Node 22),
+and the dependencies in `requirements-dev.txt`. Dependency setup and CLI discovery
+may use the network; registered remote sources are fetched during remote checks.
+New/import writes skill files and registrations. `contribute.py check` rewrites
+README/catalog files before validation; it does not stage, commit, push or open a
+PR. `sync_sources.py --check` leaves catalog mirrors unchanged; apply mode writes
+mirrors and the lock. Git submission requires separate user authorization.
 
 ## Validation
 
 The catalog's unit tests, structural validation, generated catalog check, and
 skills CLI discovery are the applicable evidence. They do not prove that a
-newly contributed skill behaves correctly; each skill should describe actual
-validation and limitations in its Skill Card, without a separate eval form.
-A local skill has no lock entry or content digest, so its
-integrity evidence is review, protected branches, required checks and DCO
-rather than remote provenance.
+newly contributed skill behaves correctly. A Validation section and separate eval
+form are not required. A local skill has no lock entry or content digest. Its
+review-based safeguards depend on configured branch protection and required
+checks; local test success does not establish those settings or remote CI success.

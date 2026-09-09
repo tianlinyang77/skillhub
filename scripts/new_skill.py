@@ -137,6 +137,7 @@ def validate_config(config):
         ("owner", config.owner),
         ("description", config.description),
         ("license", config.license_id),
+        ("runtime permissions", config.runtime_permissions),
         ("product name", config.product_name),
         ("product description", config.product_description),
     ):
@@ -277,7 +278,6 @@ def render_skill_card(config, template_root):
         ),
         "Replace with one sentence describing the skill's outcome.": config.description,
         "Replace with the maintaining team and maintainer contact mechanism.": config.owner,
-        "- Lifecycle: `staging` or `published`": "- Lifecycle: `published`",
         "Replace with the SPDX identifier and required attribution files.": (
             f"Declared as `{config.license_id}`; see the bundled `LICENSE` and any bundled `NOTICE`."
             if config.license_file else
@@ -384,9 +384,15 @@ def render_component(config):
             raise ScaffoldError(f"{path} must contain a mapping")
         data_local = data.get("local", False)
         data_repo = data.get("repo") or (CATALOG_REPO if data_local else None)
-        for skill in data.get("skills", []):
+        skills = data.get("skills")
+        if not isinstance(skills, list) or not skills:
+            raise ScaffoldError(
+                f"{path}: skills must be a non-empty list. Review git diff and restore "
+                "accidentally removed registrations before retrying; do not clear other skills."
+            )
+        for skill in skills:
             if not isinstance(skill, dict):
-                continue
+                raise ScaffoldError(f"{path}: each skills entry must be a mapping")
             if skill.get("catalog_dir") == config.name:
                 raise ScaffoldError(
                     f"catalog_dir '{config.name}' is already registered in {path}"
@@ -510,9 +516,10 @@ def create_scaffold(config, template_root=TEMPLATE_ROOT):
         print(f"Original contribution uses repository license: {config.license_id}")
     if config.notice_file:
         print(f"Copied NOTICE from {config.notice_file}")
-    print(
-        "NEXT: verify --license matches the copied license text and NOTICE obligations."
-    )
+    if config.license_file:
+        print("NEXT: verify the declared license matches the bundled text and NOTICE obligations.")
+    else:
+        print("NEXT: review the repository license and any applicable NOTICE obligations.")
     print(
         "NEXT: complete the skill instructions and review the generated Skill Card; lifecycle is already published."
     )
@@ -553,7 +560,7 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--license-file",
-        help="license text to copy; defaults to LICENSE, LICENSE.txt, or LICENSE.md in source root",
+        help="optional license text to bundle; local Apache-2.0 defaults to referencing the root license",
     )
     parser.add_argument(
         "--notice-file",

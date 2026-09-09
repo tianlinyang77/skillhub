@@ -8,18 +8,33 @@ normative rules see
 
 ```
 contribute.py new | import
-  -> review SKILL.md and generated skill-card.md (already published)
+  -> review SKILL.md and generated skill-card.md (lifecycle defaults to published)
   -> contribute.py check
   -> commit --signoff, open one pull request
 ```
 
-## 1. Create a branch
+## Preparation (once per checkout)
+
+Run commands from a SkillHub checkout, not from the original skill directory.
+Use Python 3.11+, Git, and Node.js/npm (CI uses Node.js 22). In PowerShell,
+`python` may be used in place of `python3`.
 
 ```bash
-git checkout -b feat/add-<skill-name>
+python3 -m pip install -r requirements-dev.txt
+git config --local user.name "Your Git author name"
+git config --local user.email "Your verified GitHub email or GitHub noreply address"
 ```
 
-## 2. Add the skill
+Use your actual Git identity, not the example text. Check `git status` before
+updating; preserve existing work. Start a contribution branch from current main:
+
+```bash
+git switch main
+git pull --ff-only origin main
+git switch -c feat/add-<skill-name>
+```
+
+## 1. Add the skill
 
 For a new skill, run the interactive local scaffold:
 
@@ -27,7 +42,7 @@ For a new skill, run the interactive local scaffold:
 python3 scripts/contribute.py new <skill-name>
 ```
 
-The command asks for owner, description and category, then creates the
+The command asks for owner, description, category, and runtime requirements and permissions, then creates the
 skill directory and local registration. Original contributions default to the
 root Apache-2.0 license; no duplicate LICENSE file is generated. Use `--dry-run` to preview destinations,
 `--with-references` to create a linked reference scaffold, or `--help` to see
@@ -46,15 +61,22 @@ is trustworthy, asks only for missing values, and always changes the imported
 Skill Card lifecycle to `published`. It is a one-time local copy, not upstream
 synchronization.
 
+Imports prioritize an explicit `--runtime-permissions` value, then an existing
+non-empty Skill Card runtime section, then a prompt. Enter `see SKILL.md` if
+that document already explains the requirements; the importer records a link.
+In non-interactive mode with no existing value, the default is that same link.
+Selecting a category number records it automatically; no second manual category
+edit or automatic guessing is needed.
+
 The category must match [the taxonomy](../governance/taxonomy.md) exactly; a
 wrong value prints the allowed set. Bare generic names such as `profile`,
 `benchmark`, `test`, `build` and `deploy` are rejected.
 
-## 3. Fill in the content
+### Review the content
 
 This is the only step no helper can do for the author.
 
-- **`SKILL.md`** -- replace the body, keeping the generated frontmatter. Stay at
+- **`SKILL.md`** -- complete a new scaffold, or review the imported body. Stay at
   or below 500 lines and move detail into `references/`.
 - **Bundled files** -- copy any `scripts/`, `references/` or `assets/` the skill
   needs into the skill directory. Everything it needs must be inside it.
@@ -64,8 +86,11 @@ This is the only step no helper can do for the author.
   repeating documented requirements. Non-interactive use defaults to that reference.
 
 No separate eval file or Skill Card Validation section is required.
+Known retired generator placeholders are cleaned during import; real authored
+notes are retained. Other unfinished placeholders must be resolved before import.
+The `published` field does not mean the contribution has been reviewed or released.
 
-## 4. Check, then submit
+## 2. Check
 
 ```bash
 python3 scripts/contribute.py check
@@ -76,8 +101,19 @@ validation, generated-file checks, remote-provenance checks (when present), and
 normal/full-depth CLI discovery. It regenerates catalog files but never updates
 a remote mirror or submits Git changes.
 
+These are catalog/tool checks, not a real run of the contributed skill. PR
+Quality Gate scanners and DCO run separately after submission. A local pass
+does not prove source-code quality, security, hardware behavior, or merge approval.
+
+## 3. Submit
+
+Review the changes and stage only this contribution:
+
 ```bash
-git add -A
+git status
+git diff
+git add -- skills/<skill-name> components.d/skillhub.yml README.md catalog.json skills.sh.json
+git diff --cached --stat
 git commit --signoff -m "feat(skills): add <skill-name>"
 git push -u origin feat/add-<skill-name>
 ```
@@ -86,17 +122,43 @@ One pull request carries the content, its registration and the regenerated
 catalog files. `--signoff` is required; the DCO check fails without it. Open
 the pull request in the GitHub browser; `gh` is not required.
 
+If you use GitHub CLI, after a successful commit and push:
+
+```bash
+gh auth login
+gh pr create --base main --head feat/add-<skill-name> --fill
+gh pr checks
+```
+
+Do not merge while required checks are queued or failing. Maintainer review
+and the [repository settings baseline](../governance/repository-settings.md)
+are still required.
+
 ## Common failures
 
 | Message | Cause |
 | --- | --- |
-| `lifecycle must equal 'published'` | The Skill Card is still `staging` |
-| `unresolved scaffold placeholder` | A `TODO` or `Replace with` marker remains |
+| `lifecycle must equal 'published'` | An old or manually authored card is still `staging`; new cards already default to `published` |
+| `unresolved scaffold placeholder` / `unresolved template placeholder` | A recognized scaffold token remains; Skill Cards also reject TODO/TBD markers. SKILL.md body does not reject every ordinary TODO/TBD mention. |
+| `Runtime and permissions must contain text` | Fill the runtime section, or link to the requirements already documented in SKILL.md |
+| `Refusing to overwrite existing destination` | The skill is already imported; edit the existing local copy and run check, rather than importing again |
+| `skills must be a non-empty list` | A component list is empty or malformed; inspect its diff and restore accidentally removed registrations, not just an empty list |
+| `unable to auto-detect email address` | Configure the current repository's Git name/email, then retry commit and push; staged files remain |
+| `Head sha can't be blank` / `No commits between` | Verify the commit and branch push succeeded before creating the PR |
 | `Catalog files are out of date` | Run `python3 scripts/contribute.py check` |
 | `category must be one of: ...` | The category is not in the taxonomy allowlist |
 | `template scaffold file is not publishable` | A `.template` file was copied in unrenamed |
 | `Conflicting license declarations` during import | Existing declarations and an explicit `--license` disagree; resolve the conflict without overwriting source rights. Undeclared original imports default to Apache-2.0; no license or source URL prompt is required. |
 | DCO check fails | The commit is missing `--signoff` |
+
+### Retrying an existing import
+
+Updating SkillHub's scripts does not rewrite a previously generated Skill Card.
+Prefer editing that local card: remove retired template-only Validation/origin
+lines, retain real authored notes, and complete its runtime information.
+If deliberately starting again, back up the imported directory outside `skills/`
+and remove only its own component list item. Never clear the shared registry or
+delete the original source directory.
 
 ## Remote components (opt-in)
 

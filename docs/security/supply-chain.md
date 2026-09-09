@@ -16,14 +16,16 @@ A local skill's only source of truth is this repository:
 - the component sets `local: true`;
 - an omitted `repo` normalizes to `HYGON-AI/skillhub`, and any other value is rejected;
 - the source path must equal `skills/<catalog_dir>` exactly;
-- content, registration, validation records, licensing and generated catalog files
+- content, registration, runtime requirements, licensing and generated catalog files
   are reviewed in a single pull request.
 
 A local skill has **no `.skillhub-lock.json` entry and no remote content
-digest**. Its integrity rests on Git history, protected branches, required
-checks, CODEOWNERS review and DCO sign-off -- not on the cryptographic
-provenance that a resolved remote commit and tree digest provide. Do not
-present local review as remote provenance.
+digest**. Its safeguards are Git history, review and DCO sign-off, with protected
+branches, required checks and CODEOWNERS review effective only when configured
+on GitHub. Committing workflow and CODEOWNERS files does not enable enforcement;
+verify the [repository settings](../governance/repository-settings.md) separately.
+Do not present local review as remote provenance. The remote commit and digest
+mechanism below verifies byte consistency, not authorship or safety.
 
 ## Remote components (explicit opt-in)
 

@@ -73,7 +73,9 @@ def prompt_value(label, categories=None):
         except EOFError as exc:
             raise ContributionError(
                 "Input ended before metadata was complete; no scaffold was written. "
-                "Provide --owner, --description, --license and --category for non-interactive use."
+                "Provide the missing author/category metadata with flags; use "
+                "--runtime-permissions for runtime requirements. Original contributions default "
+                "to Apache-2.0. See the selected subcommand's --help."
             ) from exc
         if categories:
             if value in {str(i) for i in range(1, len(categories) + 1)}:
@@ -195,6 +197,7 @@ def check_catalog(args, root):
         require_success(run([sys.executable, *arguments], root), label)
     for number, extra in enumerate(([], ["--full-depth"]), 7):
         label = "CLI discovery" + (" (full-depth)" if extra else "")
+        print(f"[{number}/8] {label}", flush=True)
         result = run(
             [npx, "--yes", "skills@1.5.23", "add", ".", "--list", *extra],
             root, capture=True,

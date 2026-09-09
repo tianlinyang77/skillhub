@@ -1,7 +1,7 @@
 # Skill admission policy
 
 A directory is not publishable merely because a skills CLI can discover its
-`SKILL.md`. Admission requires ownership, portability, behavioral evidence,
+`SKILL.md`. Admission requires ownership, portability, content review,
 redistribution rights, and an auditable source.
 
 ## Required decisions
@@ -17,7 +17,8 @@ Before synchronization or publication, record:
 4. Applicable license, copyright and NOTICE obligations.
 5. Intended positive prompts and nearby prompts that must not trigger it.
 6. Required tools, network access, hardware and destructive side effects.
-7. The validation environment and evidence available for its claims.
+7. Whether any claimed results are supported. This is a review concern, not a
+   mandatory Validation section or evaluation form.
 
 ## Publication gates
 
@@ -44,6 +45,9 @@ Before synchronization or publication, record:
 - Quality Gate, catalog validation, DCO and catalog-maintainer review pass.
 
 ## Staging and exceptions
+
+Generated Skill Cards default to `published` to avoid a manual state change.
+That field does not mean a PR was approved, checks passed, or release occurred.
 
 `staging/` does not grant trust or publication status. A candidate may remain
 there while its trigger boundary, licensing or behavior evidence is repaired.

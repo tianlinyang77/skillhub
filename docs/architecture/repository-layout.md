@@ -16,10 +16,10 @@ supporting material belongs in `references/` with ordinary Markdown names.
 ## Normative tree
 
 ```text
-skills/
+skillhub/
 ├── .github/                  # Pull-request templates, ownership and CI
 ├── assets/                   # Repository-level README media; never skill content
-├── components.d/             # Product source registry; one file per product
+├── components.d/             # Shared local registry plus optional remote components
 ├── docs/                     # Architecture, governance and release contracts
 ├── scripts/                  # Validation, synchronization and generation tools
 ├── staging/                  # Catalog-owned SKILL.md.candidate files
@@ -76,19 +76,21 @@ symlinks, special files and case-colliding paths are rejected.
 ## Lifecycle
 
 ```text
-product source or catalog prototype
-              |
-              v
-      admission review / staging
-              |
-              v
-    synchronized published skill
-              |
-              v
-        catalog metadata
+local new/import --------------------> skills/<name> + registration
+optional prototype -> reviewed promotion ------^
+remote source -> opt-in synchronization ------^ + lock
+                                              |
+                                    generate and check
+                                              |
+                                  PR checks and review
+                                              |
+                                       merge / release
 ```
 
 Product-owned candidates remain in their product repositories until admitted.
+Local generation defaults the card lifecycle to `published`; this is a catalog
+metadata value, not approval or release. Ordinary local contributions do not
+have to pass through `staging/`. No Validation section or eval dataset is required.
 `staging/` is only for catalog-owned prototypes and review fixtures; it is not
 a second mirror of a product repository. Candidate entrypoints are named
 `SKILL.md.candidate`; validation renames them only inside an isolated temporary

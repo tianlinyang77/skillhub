@@ -1,11 +1,14 @@
 # Component registry
 
 Each YAML file registers one component: either skills owned by this repository
-(the default) or skills mirrored from one GitHub repository. One file
-per team avoids a shared manifest conflict.
+(the default) or skills mirrored from one GitHub repository. The normal local
+helper appends to the shared `skillhub.yml`; remote sources use separate files.
 
 Required fields are `name`, `description`, and a non-empty `skills` list. Each
 skill needs `path`, a globally unique `catalog_dir`, and `category`.
+Do not clear the list to re-import one skill. Empty `skills:` and `skills: []`
+are invalid registrations; inspect `git diff` and restore any accidentally
+removed entries before retrying.
 
 ## Local component (default)
 

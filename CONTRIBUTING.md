@@ -54,9 +54,9 @@ python3 scripts/contribute.py import ../quality-gate-audit
 
 Then, for either path:
 
-1. Replace the scaffold `TODO` sections in `SKILL.md` and `skill-card.md`.
+1. Complete a newly scaffolded `SKILL.md`, or review the imported instructions.
    An imported Skill Card defaults to `published`; preserve upstream
-   attribution and license material and complete any missing local review notes.
+   attribution and license material and review runtime requirements and permissions.
 2. Review the generated metadata; no manual lifecycle change is needed.
 3. Run all local gates:
 
@@ -75,7 +75,7 @@ by `python3 scripts/contribute.py new --help`.
 A local component may omit `repo`; when present it must equal
 `HYGON-AI/skillhub`, and the skill's source path must equal
 `skills/<catalog_dir>`. A local skill has no lock entry and no content digest:
-its integrity rests on review, protected branches, required checks and DCO.
+its safeguards depend on review, DCO and configured branch protection/required checks.
 
 ## Add a remote product skill (opt-in)
 
@@ -151,6 +151,11 @@ The generated Skill Card defaults to `published`. `contribute.py new` and
 `import` ask for runtime requirements and permissions, or accept
 `--runtime-permissions`; referring to SKILL.md is allowed when it documents them.
 Non-interactive use without this flag records a reference to SKILL.md.
+For imports, an existing non-empty runtime section is reused before any prompt
+or default; an explicit flag takes precedence. That section may not be empty.
+Known retired generator Validation/origin placeholders are removed only from
+the imported copy. Actual authored notes and source files are preserved;
+other unfinished placeholders fail before registration.
 No Validation section is required or generated. No eval dataset
 is required or generated. Upstream evaluation files may be retained as optional
 resources; this catalog does not execute or impose a dataset schema on them.
@@ -193,7 +198,7 @@ discovery.
 
 ## Pull request checklist
 
-- [ ] The real source repository, ref and source path are recorded.
+- [ ] Local identity points to this catalog; remote components also record the real upstream repository, ref and path.
 - [ ] Original authorship and any adaptations are described accurately.
 - [ ] A catalog maintainer owns ongoing review and approved publication.
 - [ ] The import PR passes Quality Gate, catalog validation and DCO before merge.
@@ -212,3 +217,10 @@ discovery.
 - [ ] No mirrored files were edited only in the catalog.
 
 Use `git commit --signoff` so the contribution records [Developer Certificate of Origin](https://developercertificate.org/) agreement.
+
+Local catalog checks, the PR Quality Gate and DCO are different checks. The
+local command does not run the external security/quality scanners, verify Git
+author configuration or validate a future commit's sign-off. Source-file SPDX
+requirements from a submission policy are distinct from bundling LICENSE text.
+Repository policy must be enforced by the configured PR checks. See the
+[settings baseline](docs/governance/repository-settings.md) before production use.
