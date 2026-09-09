@@ -16,3 +16,6 @@ skills:
   - path: "skills/audit-hygon-quality-security"
     catalog_dir: "audit-hygon-quality-security"
     category: "Governance and Compliance"
+  - path: "skills/profile-hipprof-analysis"
+    catalog_dir: "profile-hipprof-analysis"
+    category: "Performance and Profiling"
