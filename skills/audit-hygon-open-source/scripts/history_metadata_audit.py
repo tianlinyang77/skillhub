@@ -23,8 +23,8 @@ FIELDS = (
     ("subject", "Commit 标题"),
     ("body", "Commit 正文"),
 )
-DEFAULT_BLOCK_TERMS = ("sugon", "rogon")
-DEFAULT_REVIEW_TERMS = ("dcu",)
+DEFAULT_BLOCK_TERMS = ()
+DEFAULT_REVIEW_TERMS = ()
 MAX_EVIDENCE = 300
 
 
@@ -267,7 +267,7 @@ def render_report(
         conclusion = "**结论：扫描有效，发现发布阻断身份字段，需完成历史脱敏。**"
         result = "blocked"
     elif summary["review_rows"]:
-        conclusion = "**结论：扫描有效，未发现阻断身份字段，但存在 DCU 历史迁移复核项。**"
+        conclusion = "**结论：扫描有效，未发现阻断字段，但存在需要人工复核的历史元数据项。**"
         result = "review"
     else:
         conclusion = "**结论：扫描通过，未发现配置的历史元数据字段。**"
@@ -359,7 +359,7 @@ def render_report(
     else:
         lines.append("| - | - | 0 | 0 | 0 |")
 
-    for severity, title in (("阻断", "## 3. 发布阻断项"), ("复核", "## 4. DCU 迁移复核项")):
+    for severity, title in (("阻断", "## 3. 发布阻断项"), ("复核", "## 4. 历史元数据复核项")):
         selected = [item for item in findings if item["severity"] == severity]
         lines.extend(
             [
@@ -392,7 +392,7 @@ def render_report(
             "",
             "- 本报告只检查固定 Commit 的完整可达 Commit 元数据。",
             "- 未扫描文件路径、文件内容、工作区、未跟踪文件或其他不可达 refs。",
-            "- `sugon/rogon` 命中是发布阻断；`dcu` 命中只进入迁移复核，不自动认定违规。",
+            "- 经批准的阻断扫描词命中会阻断发布；复核扫描词命中仅进入人工复核。",
             "- 本次未修改 Git 历史、refs、remote、index 或 worktree。",
             "",
         ]
@@ -429,6 +429,8 @@ def audit(args):
         require_output_outside_repo(repo, output)
     block_terms = normalize_terms(args.block_term, DEFAULT_BLOCK_TERMS)
     review_terms = normalize_terms(args.review_term, DEFAULT_REVIEW_TERMS)
+    if not block_terms and not review_terms:
+        raise AuditError("至少提供一个经批准的阻断或复核扫描词")
     overlap = {item.casefold() for item in block_terms} & {
         item.casefold() for item in review_terms
     }
@@ -496,12 +498,12 @@ def main():
     parser.add_argument(
         "--block-term",
         action="append",
-        help="阻断扫描词，可重复；默认 sugon、rogon",
+        help="阻断扫描词，可重复；由批准策略或调用者显式提供",
     )
     parser.add_argument(
         "--review-term",
         action="append",
-        help="复核扫描词，可重复；默认 dcu",
+        help="复核扫描词，可重复；由批准策略或调用者显式提供",
     )
     parser.add_argument(
         "--case-sensitive",

@@ -3,7 +3,7 @@
 | Scanner | Ownership |
 | --- | --- |
 | Native Git | exact tree, paths, modes, symlinks, encoding, line endings, control characters, size, LFS pointers, confidential markers |
-| Shared identity engine | case-insensitive sugon/rogon in paths, contents, and reachable Commit metadata |
+| Shared identity engine | policy-defined identity markers in paths, contents, and reachable Commit metadata |
 | Gitleaks | current and reachable-history credentials and secrets, always redacted; deterministic templates and explicit placeholders in documentation/example contexts are ignored after read-only source verification, while uncertain values remain blocking |
 | Trivy | dependency vulnerabilities only; no secret, license, or misconfiguration duplication; use the Runner's existing local database with all automatic database updates disabled; report its timestamp and stale status, and fail only when the local database is missing or unreadable |
 | actionlint | GitHub Actions syntax, expressions, reusable workflows, and action metadata; embedded ShellCheck is disabled to avoid duplicate concurrent scans |

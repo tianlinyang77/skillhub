@@ -15,7 +15,7 @@ The YAML defines:
 - `legal_files`: LICENSE and NOTICE filenames. Root-license discovery also accepts common `LICENSE.*`, `LICENSE-*`, `COPYING.*`, and `COPYING-*` variants such as `LICENSE-APACHE`.
 - `third_party`: primary/accepted registry files and required provenance fields.
 - `readme`: attribution markers.
-- `platform`: legacy engine compatibility only; `$audit-hygon-platform` owns formal HCU/DCU and AMD/XGMI conclusions.
+- `platform`: legacy engine compatibility only; the platform-specialist workflow owns platform-specific conclusions.
 - `governance`: execution mode, compliance workflows, optional immutable-ref enforcement, and source modes. Use `centralized-skill` for the standalone full-repository audit Skill; repository-local workflows are then explicitly out of scope. Use `repository-ci` only for a separately requested validation of repository-local PR enforcement.
 - `dependency_pinning`: changed dependency manifests that require fixed versions.
 - `commit_log`: advisory conventional-commit rules and the maximum number of newest in-scope Commits. The in-scope set is target-minus-fixed-baseline for derivative repositories and target-reachable history for original repositories.
@@ -83,14 +83,14 @@ added file HYGON-authored merely because it was introduced by a private commit; 
 source may lack a reliable header. Keep mixed public/private changes, deletion-only changes without
 target-side lines, and failed blame attribution in blocking review.
 
-## HCU runtime output
+## Platform-specific runtime output
 
-Do not enable platform wording from the open-source compliance Skill. Use `$audit-hygon-platform`, which owns candidate classification, coverage gaps, protected interfaces, and runtime evidence. Keep the legacy policy block only for backward-compatible engine parsing; it must not be presented as the formal platform report.
+Do not enable platform wording from the open-source compliance Skill. Keep the legacy policy block only for backward-compatible engine parsing; it must not be presented as the formal platform report.
 
 Do not use the platform rule to rename repository paths, packages, imports, APIs, environment variables, configuration keys, protocols, macros, ABI symbols, or backend identifiers. If a protected token crosses an output boundary, require compatibility-aware handling rather than a mechanical replacement.
 
 ## Brand identity
 
-For policy v1.3 and later, load `policies/brand/forbidden-identities-v1.yaml`. Scan case-insensitively for `sugon` and `rogon` in committed paths, committed text, and private Commit metadata introduced outside the fixed upstream baseline. Commit metadata includes author and committer names and emails plus subject and body. Treat every match as blocking. Do not block `hygon` or HYGON email addresses.
+For policy v1.3 and later, load the approved forbidden-identity policy. Scan committed paths, committed text, and private Commit metadata introduced outside the fixed upstream baseline for policy-defined markers. Commit metadata includes author and committer names and emails plus subject and body. Treat every configured blocking match according to policy.
 
-This rule is mandatory and independent from the opt-in HCU runtime wording scan.
+This rule is mandatory and independent from optional platform wording scans.
