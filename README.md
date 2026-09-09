@@ -95,7 +95,7 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 | Product | Description | Skills |
 |---|---|---|
-| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`audit-hygon-open-source`](skills/audit-hygon-open-source), [`audit-hygon-quality-security`](skills/audit-hygon-quality-security), [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
+| **SkillHub** | Author, validate, onboard, and publish portable Agent Skills across HYGON-AI projects. | [`audit-hygon-open-source`](skills/audit-hygon-open-source), [`audit-hygon-quality-security`](skills/audit-hygon-quality-security), [`profile-hipprof-analysis`](skills/profile-hipprof-analysis), [`skillhub-contributor`](skills/skillhub-contributor), [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) |
 
 <!-- catalog:end -->
 
@@ -103,7 +103,7 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 <!-- categories:start -->
 
-4 skills across 3 categories.
+5 skills across 3 categories.
 
 ### Developer Tools
 
@@ -122,6 +122,7 @@ not contain nested `SKILL.md` files or depend on sibling skills. See the
 
 | Skill | Product | Description |
 |---|---|---|
+| [`profile-hipprof-analysis`](skills/profile-hipprof-analysis) | SkillHub | DCU Profiler 性能分析器。使用 hipprof 作为默认硬件后端分析 DCU 上模型的性能，支持 PyTorch/TensorFlow/JAX 框架的框架层归因。产出 hotspot 报告、bubble 分析、kernel 级性能分解。适用：需要分析 DCU 上模型的 hotspot/bubble/kernel 性能。不适用：非 DCU 环境的 profiling。 |
 | [`torch-trace-operator-profiler`](skills/torch-trace-operator-profiler) | SkillHub | Analyze a torch.profiler Chrome/Perfetto JSON trace to attribute time across Python scopes, ATen operators, GPU kernels, runtime API overhead and memory copies. Use when diagnosing a slow PyTorch operator, custom extension, Triton kernel or submodule from a captured trace. |
 
 <!-- categories:end -->

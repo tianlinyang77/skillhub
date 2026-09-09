@@ -27,6 +27,18 @@
       "catalog_path": "skills/audit-hygon-quality-security"
     },
     {
+      "name": "profile-hipprof-analysis",
+      "description": "DCU Profiler 性能分析器。使用 hipprof 作为默认硬件后端分析 DCU 上模型的性能，支持 PyTorch/TensorFlow/JAX 框架的框架层归因。产出 hotspot 报告、bubble 分析、kernel 级性能分解。适用：需要分析 DCU 上模型的 hotspot/bubble/kernel 性能。不适用：非 DCU 环境的 profiling。",
+      "category": "Performance and Profiling",
+      "product": "SkillHub",
+      "source": {
+        "repo": "HYGON-AI/skillhub",
+        "ref": "main",
+        "path": "skills/profile-hipprof-analysis"
+      },
+      "catalog_path": "skills/profile-hipprof-analysis"
+    },
+    {
       "name": "skillhub-contributor",
       "description": "Create, review, and onboard portable Agent Skills into Hygon SkillHub. Use when adding a new SKILL.md to the catalog, registering a local or remote component in components.d, preparing a SkillHub contribution, or diagnosing catalog validation and synchronization failures.",
       "category": "Developer Tools",

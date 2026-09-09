@@ -21,6 +21,7 @@
       "title": "Performance and Profiling",
       "description": "HYGON-AI skills for performance and profiling workflows.",
       "skills": [
+        "profile-hipprof-analysis",
         "torch-trace-operator-profiler"
       ]
     }

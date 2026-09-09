@@ -1,0 +1,4 @@
+interface:
+  display_name: "Framework Prof Analyzer"
+  short_description: "Find hot paths with hipprof first, then add torch or TF attribution only if needed"
+  default_prompt: "Use $profile-hipprof-analysis with ./run.sh as the canonical run entrypoint to follow the actual execution path, detect the framework, find the smallest stable periodic unit, run hipprof first, and only add the framework attribution backend afterward: torch.profiler for PyTorch or XProf for TensorFlow/JAX. When XProf is used, export an xprof_summary with step ranges, framework hot regions, host/device phase, and optional hipprof alignment."
