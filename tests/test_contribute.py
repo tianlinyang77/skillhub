@@ -105,7 +105,7 @@ class ContributionTests(unittest.TestCase):
             source = self.source_skill(temporary)
             before = self.snapshot(source)
             code, output = self.invoke(
-                ["import", str(source), "--category", "Developer Tools", "--non-interactive"], root,
+                ["import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive"], root,
             )
             self.assertEqual(code, 0, output)
             self.assertEqual(before, self.snapshot(source))
@@ -119,8 +119,36 @@ class ContributionTests(unittest.TestCase):
             self.assertNotIn("## Validation", card)
             self.assertNotIn("TODO", card)
             self.assertIn("Local catalog import", card)
+            self.assertIn("owner: Catalog Team", card)
             registry = yaml.safe_load((root / "components.d" / "skillhub.yml").read_text(encoding="utf-8"))
             self.assertEqual(registry["skills"][0]["catalog_dir"], "imported-example")
+
+    def test_import_prompts_for_catalog_maintainer_despite_source_author(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(temporary)
+            source = self.source_skill(temporary)
+            with mock.patch("builtins.input", side_effect=["Catalog Team", "see SKILL.md"]) as prompted:
+                code, output = self.invoke(
+                    ["import", str(source), "--category", "Developer Tools"], root,
+                )
+            self.assertEqual(code, 0, output)
+            self.assertEqual(prompted.call_args_list[0].args[0], "Maintaining team: ")
+            card = (root / "skills" / "imported-example" / "skill-card.md").read_text(encoding="utf-8")
+            self.assertIn("owner: Catalog Team", card)
+            skill = (root / "skills" / "imported-example" / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("author: External Team", skill)
+
+    def test_import_noninteractive_requires_catalog_maintainer_despite_source_author(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(temporary)
+            source = self.source_skill(temporary)
+            before = self.snapshot(root)
+            code, output = self.invoke(
+                ["import", str(source), "--category", "Developer Tools", "--non-interactive"], root,
+            )
+            self.assertEqual(code, 1)
+            self.assertIn("Missing --owner", output)
+            self.assertEqual(before, self.snapshot(root))
 
     def test_import_translates_source_only_frontmatter_without_changing_source(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -128,7 +156,7 @@ class ContributionTests(unittest.TestCase):
             source = self.source_skill(temporary, source_only=True)
             before = self.snapshot(source)
             code, output = self.invoke(
-                ["import", str(source), "--category", "Developer Tools", "--non-interactive"], root,
+                ["import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive"], root,
             )
             self.assertEqual(code, 0, output)
             self.assertEqual(before, self.snapshot(source))
@@ -144,7 +172,7 @@ class ContributionTests(unittest.TestCase):
             root = self.fixture(temporary)
             source = self.source_skill(temporary)
             code, output = self.invoke([
-                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                "import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive",
                 "--runtime-permissions", "HCU and hipprof; read traces and write reports.",
             ], root)
             self.assertEqual(code, 0, output)
@@ -160,14 +188,14 @@ class ContributionTests(unittest.TestCase):
             source = self.source_skill(temporary)
             before = self.snapshot(root)
             code, output = self.invoke(
-                ["import", str(source), "--category", "Developer Tools", "--non-interactive", "--dry-run"], root,
+                ["import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive", "--dry-run"], root,
             )
             self.assertEqual(code, 0, output)
             self.assertEqual(before, self.snapshot(root))
 
             without_license = self.source_skill(Path(temporary) / "missing", with_license=False)
             code, output = self.invoke(
-                ["import", str(without_license), "--category", "Developer Tools", "--non-interactive", "--dry-run"], root,
+                ["import", str(without_license), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive", "--dry-run"], root,
             )
             self.assertEqual(code, 0, output)
             self.assertEqual(before, self.snapshot(root))
@@ -187,7 +215,7 @@ class ContributionTests(unittest.TestCase):
             )
             before = self.snapshot(source)
             with mock.patch("builtins.input", side_effect=AssertionError("unexpected prompt")):
-                code, output = self.invoke(["import", str(source), "--category", "Developer Tools"], root)
+                code, output = self.invoke(["import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools"], root)
             self.assertEqual(code, 0, output)
             card = (root / "skills/imported-example/skill-card.md").read_text(encoding="utf-8")
             self.assertIn(runtime, card)
@@ -205,7 +233,7 @@ class ContributionTests(unittest.TestCase):
             )
             before = self.snapshot(source)
             code, output = self.invoke([
-                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                "import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive",
                 "--runtime-permissions", "Updated requirements; no network.",
             ], root)
             self.assertEqual(code, 0, output)
@@ -229,7 +257,7 @@ class ContributionTests(unittest.TestCase):
                 )
                 before = self.snapshot(source)
                 code, output = self.invoke([
-                    "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                    "import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive",
                     "--runtime-permissions", "see SKILL.md",
                 ], root)
                 self.assertEqual(code, 0, output)
@@ -251,7 +279,7 @@ class ContributionTests(unittest.TestCase):
             )
             before = self.snapshot(root)
             code, output = self.invoke([
-                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                "import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive",
             ], root)
             self.assertEqual(code, 1, output)
             self.assertIn("unresolved template placeholder", output)
@@ -268,7 +296,7 @@ class ContributionTests(unittest.TestCase):
                         "name": "SkillHub", "local": True, "description": "Fixture.", "skills": skills_value,
                     }), encoding="utf-8")
                     before = self.snapshot(root)
-                    args = ["import", str(source)] if command == "import" else [
+                    args = ["import", str(source), "--owner", "Catalog Team"] if command == "import" else [
                         "new", "example-tool", "--owner", "Example Team", "--description", "Analyze tool logs.",
                     ]
                     code, output = self.invoke(args + ["--category", "Developer Tools", "--non-interactive"], root)
@@ -292,7 +320,7 @@ class ContributionTests(unittest.TestCase):
             entry.write_text(entry.read_text(encoding="utf-8").replace("Apache-2.0", "MIT"), encoding="utf-8")
             before = self.snapshot(source)
             code, output = self.invoke([
-                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                "import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive",
                 "--upstream", "https://example.org/project/LICENSE",
             ], root)
             self.assertEqual(code, 0, output)
@@ -310,7 +338,7 @@ class ContributionTests(unittest.TestCase):
             entry = source / "SKILL.md"
             entry.write_text(entry.read_text(encoding="utf-8").replace("license: Apache-2.0\n", ""), encoding="utf-8")
             code, output = self.invoke([
-                "import", str(source), "--category", "Developer Tools", "--non-interactive",
+                "import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive",
             ], root)
             self.assertEqual(code, 0, output)
             destination = root / "skills" / "imported-example"
@@ -324,7 +352,7 @@ class ContributionTests(unittest.TestCase):
             source = self.source_skill(temporary)
             (source / "references" / "SKILL.md").write_text("nested", encoding="utf-8")
             code, output = self.invoke(
-                ["import", str(source), "--category", "Developer Tools", "--non-interactive"], root,
+                ["import", str(source), "--owner", "Catalog Team", "--category", "Developer Tools", "--non-interactive"], root,
             )
             self.assertEqual(code, 1)
             self.assertIn("nested SKILL.md", output)

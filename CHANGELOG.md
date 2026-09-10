@@ -33,6 +33,10 @@ here. Generated skill synchronization updates may be grouped by release.
   remove only recognized legacy Validation/origin placeholders, and reject other
   unfinished card content before writing a destination or registration. Existing
   real validation notes and attribution remain intact.
+- Interactive imports always ask for the team maintaining the SkillHub copy
+  unless `--owner` is supplied; non-interactive imports require that flag. Source
+  authors and existing Skill Card owners remain attribution rather than being
+  silently treated as the catalog maintainer.
 - Empty runtime sections are rejected; a linked `SKILL.md` explanation is allowed.
   Malformed or empty shared component skill lists now produce actionable errors
   instead of a traceback or silently replacing registrations.

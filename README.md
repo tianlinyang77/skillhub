@@ -43,7 +43,8 @@ and are not written for one agent.
 
 Create a branch, then prefer importing an existing self-contained skill directory.
 Its `SKILL.md`, references, scripts, assets and bundled license material are
-copied without modifying the source:
+copied without modifying the source. The command asks who will maintain the
+SkillHub copy; existing source authorship remains preserved separately:
 
 ```bash
 python3 scripts/contribute.py import ../my-existing-skill

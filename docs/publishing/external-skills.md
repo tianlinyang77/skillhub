@@ -14,6 +14,11 @@ contribution branch:
 python3 scripts/contribute.py import ../upstream-skill
 ```
 
+The interactive import asks for the team that will maintain the SkillHub copy,
+even when the source already records an author or owner. This catalog maintainer
+does not replace the preserved source attribution. Pass `--owner` to provide it
+non-interactively.
+
 The source must be one flat directory containing `SKILL.md`. The importer copies
 its `SKILL.md`, references, scripts, assets and bundled LICENSE/NOTICE material;
 it does not execute or modify source files. It rejects nested skills, symlinks,

@@ -321,7 +321,7 @@ def import_local_skill(args, root, prompt):
     )
     metadata = frontmatter.get("metadata", {})
     owner = value_or_prompt(
-        args.owner or existing.get("owner") or metadata.get("author"),
+        args.owner,
         "--owner", "Maintaining team", args, prompt,
     )
     declarations = [

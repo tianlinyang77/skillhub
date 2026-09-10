@@ -33,7 +33,7 @@ def parse_args(argv=None):
     commands = parser.add_subparsers(dest="command", required=True)
     importer = commands.add_parser("import", help="copy an existing skill directory into the local catalog (preferred when one exists)")
     importer.add_argument("source", help="one local skill directory or its SKILL.md; source is never modified")
-    importer.add_argument("--owner", help="maintainer when not recorded in the original Skill Card or metadata.author")
+    importer.add_argument("--owner", help="SkillHub maintaining team; prompted unless supplied")
     importer.add_argument("--license", help="preserve source declarations; undeclared original contributions default to Apache-2.0")
     importer.add_argument("--category", help="exact catalog category; prompt if it cannot be reused")
     importer.add_argument("--runtime-permissions", help="runtime requirements and permissions; may refer to SKILL.md")

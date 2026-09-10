@@ -46,9 +46,14 @@ python3 scripts/contribute.py import ../existing-skill
 `import` copies one flat skill directory, including `SKILL.md`, `references/`,
 `scripts/`, `assets/` and bundled LICENSE/NOTICE material. It does not execute
 source files or modify the source directory. It reuses source metadata where it
-is trustworthy, asks only for missing values, and always changes the imported
-Skill Card lifecycle to `published`. It is a one-time local copy, not upstream
-synchronization.
+is trustworthy and always changes the imported Skill Card lifecycle to
+`published`. It is a one-time local copy, not upstream synchronization.
+
+Import always asks for the **SkillHub maintaining team** unless `--owner` is
+supplied. This records who is responsible for the catalog copy; it does not
+replace the original author or an existing Skill Card owner, which remain in
+the imported package as attribution. Category and runtime information are only
+prompted when they cannot be reused or were not supplied explicitly.
 
 Imports prioritize an explicit `--runtime-permissions` value, then an existing
 non-empty Skill Card runtime section, then a prompt. Enter `see SKILL.md` if

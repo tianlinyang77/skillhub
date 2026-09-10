@@ -11,8 +11,10 @@ python3 scripts/contribute.py import ../existing-skill
 
 Review with `--dry-run` when paths are uncertain. Import the package instead of
 scaffolding over it, and review its instructions, resources, runtime requirements
-and permissions after copying. Cards default to `published`; this does not bypass
-content review or authorize submission.
+and permissions after copying. Import always prompts for the SkillHub maintaining
+team unless `--owner` is supplied; a different source author or Skill Card owner
+remains as attribution. Cards default to `published`; this does not bypass content
+review or authorize submission.
 
 Only when no skill package exists, create one from scratch:
 

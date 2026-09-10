@@ -39,7 +39,8 @@ For a condensed walkthrough with the common failure messages, see
 
 From a SkillHub checkout, import an existing skill directory when one is
 available. This retains the source package and copies its portable resources;
-it does not establish ongoing synchronization:
+it does not establish ongoing synchronization. Enter the team responsible for
+maintaining the SkillHub copy; this does not replace source authorship:
 
 ```bash
 python3 scripts/contribute.py import ../quality-gate-audit
