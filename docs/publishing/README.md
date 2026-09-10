@@ -5,8 +5,8 @@ For the step-by-step contributor path, see
 
 ## Local skill (default)
 
-1. Run `python3 scripts/contribute.py new <skill-name>` or import one existing
-   package with `python3 scripts/contribute.py import <path>`.
+1. Import an existing package with `python3 scripts/contribute.py import <path>`.
+   If no package exists yet, run `python3 scripts/contribute.py new <skill-name>`.
 2. Review its Skill Card, runtime requirements, attribution and applicable license
    material. Its lifecycle already defaults to `published`; this is not approval.
 3. Run `python3 scripts/contribute.py check` to regenerate metadata and run all

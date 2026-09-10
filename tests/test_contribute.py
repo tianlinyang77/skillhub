@@ -351,7 +351,7 @@ class ContributionTests(unittest.TestCase):
             timeout=10,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("{new,import,check}", result.stdout)
+        self.assertIn("{import,new,check}", result.stdout)
         with self.assertRaises(SystemExit) as failure:
             self.invoke(["submit"])
         self.assertEqual(failure.exception.code, 2)

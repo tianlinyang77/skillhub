@@ -37,19 +37,19 @@ Third-party skills may be mirrored unchanged when their license permits it and t
 For a condensed walkthrough with the common failure messages, see
 [Add a skill: quick start](docs/publishing/quickstart.md).
 
-From a SkillHub checkout, create and register a new local skill with an
-interactive command:
-
-```bash
-python3 scripts/contribute.py new quality-gate-audit
-```
-
-For an existing skill directory, use the import path instead. It retains the
-source package and copies its portable resources; it does not establish ongoing
-synchronization:
+From a SkillHub checkout, import an existing skill directory when one is
+available. This retains the source package and copies its portable resources;
+it does not establish ongoing synchronization:
 
 ```bash
 python3 scripts/contribute.py import ../quality-gate-audit
+```
+
+If no skill directory exists yet, create and register a new local skill with
+the interactive scaffold:
+
+```bash
+python3 scripts/contribute.py new quality-gate-audit
 ```
 
 Then, for either path:
@@ -70,7 +70,7 @@ Then, for either path:
 The helper never creates a branch, stages files, commits, pushes or opens a
 pull request. Use ordinary Git and `git commit --signoff` after reviewing the
 generated diff. For non-interactive automation, pass the metadata flags shown
-by `python3 scripts/contribute.py new --help`.
+by the selected command's `import --help` or `new --help` output.
 
 A local component may omit `repo`; when present it must equal
 `HYGON-AI/skillhub`, and the skill's source path must equal

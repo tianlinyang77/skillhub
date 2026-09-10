@@ -76,7 +76,7 @@ symlinks, special files and case-colliding paths are rejected.
 ## Lifecycle
 
 ```text
-local new/import --------------------> skills/<name> + registration
+local import/new --------------------> skills/<name> + registration
 optional prototype -> reviewed promotion ------^
 remote source -> opt-in synchronization ------^ + lock
                                               |

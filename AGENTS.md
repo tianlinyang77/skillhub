@@ -7,7 +7,8 @@
   GitHub owner/repository. Preserve upstream authorship and redistribution rights.
   It requires `repo` and is mirrored by
   synchronization, never by hand.
-- Prefer `python3 scripts/contribute.py new <name>` or `import <path>`, then
+- Prefer `python3 scripts/contribute.py import <path>` when a skill directory
+  already exists; use `new <name>` only when starting from scratch. Then run
   `contribute.py check`. Use `new_skill.py --repo` only for the opt-in remote scaffold.
 - Treat `docs/architecture/repository-layout.md` as the normative directory contract.
 - Treat `components.d/*.yml` as the source registry and `skills/` as the published catalog.

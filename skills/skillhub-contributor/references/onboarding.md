@@ -1,18 +1,27 @@
 # Skill onboarding reference
 
-## Scaffold command
+## Import or scaffold
 
-From the SkillHub checkout, create a local directory and registration together:
+From the SkillHub checkout, import an existing skill package and create its local
+registration together:
+
+```bash
+python3 scripts/contribute.py import ../existing-skill
+```
+
+Review with `--dry-run` when paths are uncertain. Import the package instead of
+scaffolding over it, and review its instructions, resources, runtime requirements
+and permissions after copying. Cards default to `published`; this does not bypass
+content review or authorize submission.
+
+Only when no skill package exists, create one from scratch:
 
 ```bash
 python3 scripts/contribute.py new example-skill --with-references
 ```
 
-Review with `--dry-run` when paths are uncertain. Cards default to `published`;
-this does not bypass content review or authorize submission. Complete scaffold
-content and review runtime requirements and permissions. For an existing package, use
-`python3 scripts/contribute.py import ../existing-skill` instead of scaffolding
-over it. With `--with-references`, the generated `SKILL.md` links to the new
+Complete the generated scaffold before checking it. With `--with-references`,
+the generated `SKILL.md` links to the new
 `references/details.md` scaffold so contributors can state when detailed
 material should be loaded.
 

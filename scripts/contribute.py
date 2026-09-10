@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create or import a local skill and run catalog checks; never submit Git changes."""
+"""Import or create a local skill and run catalog checks; never submit Git changes."""
 
 # Copyright (c) 2026 Hygon Information Technology Co., Ltd.
 # SPDX-License-Identifier: Apache-2.0
@@ -28,9 +28,20 @@ def local_module(name):
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(
-        description="Create or import a local skill and run catalog checks. No Git submission.",
+        description="Import or create a local skill and run catalog checks. No Git submission.",
     )
     commands = parser.add_subparsers(dest="command", required=True)
+    importer = commands.add_parser("import", help="copy an existing skill directory into the local catalog (preferred when one exists)")
+    importer.add_argument("source", help="one local skill directory or its SKILL.md; source is never modified")
+    importer.add_argument("--owner", help="maintainer when not recorded in the original Skill Card or metadata.author")
+    importer.add_argument("--license", help="preserve source declarations; undeclared original contributions default to Apache-2.0")
+    importer.add_argument("--category", help="exact catalog category; prompt if it cannot be reused")
+    importer.add_argument("--runtime-permissions", help="runtime requirements and permissions; may refer to SKILL.md")
+    importer.add_argument("--license-file", help="reviewed license text if not bundled; relative to the current directory")
+    importer.add_argument("--notice-file", help="additional required NOTICE if not bundled; never overwrites an existing notice")
+    importer.add_argument("--upstream", help="optional origin or attribution text; not required for original contributions")
+    importer.add_argument("--dry-run", action="store_true", help="validate and preview without changing the catalog")
+    importer.add_argument("--non-interactive", action="store_true", help="fail instead of prompting for missing metadata")
     new = commands.add_parser("new", help="scaffold a local skill; prompt for missing metadata")
     new.add_argument("name", help="globally descriptive lowercase-hyphen skill name")
     new.add_argument("--owner", help="original author or maintaining team")
@@ -44,17 +55,6 @@ def parse_args(argv=None):
     new.add_argument("--with-references", action="store_true", help="create a linked reference scaffold")
     new.add_argument("--dry-run", action="store_true", help="show destinations without writing")
     new.add_argument("--non-interactive", action="store_true", help="fail if required metadata is missing")
-    importer = commands.add_parser("import", help="copy an existing skill directory into the local catalog")
-    importer.add_argument("source", help="one local skill directory or its SKILL.md; source is never modified")
-    importer.add_argument("--owner", help="maintainer when not recorded in the original Skill Card or metadata.author")
-    importer.add_argument("--license", help="preserve source declarations; undeclared original contributions default to Apache-2.0")
-    importer.add_argument("--category", help="exact catalog category; prompt if it cannot be reused")
-    importer.add_argument("--runtime-permissions", help="runtime requirements and permissions; may refer to SKILL.md")
-    importer.add_argument("--license-file", help="reviewed license text if not bundled; relative to the current directory")
-    importer.add_argument("--notice-file", help="additional required NOTICE if not bundled; never overwrites an existing notice")
-    importer.add_argument("--upstream", help="optional origin or attribution text; not required for original contributions")
-    importer.add_argument("--dry-run", action="store_true", help="validate and preview without changing the catalog")
-    importer.add_argument("--non-interactive", action="store_true", help="fail instead of prompting for missing metadata")
     check = commands.add_parser("check", help="regenerate catalog files and run all local checks")
     check.add_argument(
         "name", nargs="?",

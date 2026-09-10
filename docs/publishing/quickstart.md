@@ -1,13 +1,14 @@
 # Add a skill: quick start
 
-The normal path is a local skill: create or import it in this repository, review
+The normal path is a local skill: import an existing skill directory, or create
+one here when no package exists. Then review
 the content, run one local check command, and open one pull request. For the
 normative rules see
 [CONTRIBUTING.md](../../CONTRIBUTING.md); for the release flow see
 [publishing](README.md).
 
 ```
-contribute.py new | import
+contribute.py import <existing-skill> | new <name> when starting from scratch
   -> review SKILL.md and generated skill-card.md (lifecycle defaults to published)
   -> contribute.py check
   -> commit --signoff, open one pull request
@@ -36,19 +37,7 @@ git switch -c feat/add-<skill-name>
 
 ## 1. Add the skill
 
-For a new skill, run the interactive local scaffold:
-
-```bash
-python3 scripts/contribute.py new <skill-name>
-```
-
-The command asks for owner, description, category, and runtime requirements and permissions, then creates the
-skill directory and local registration. Original contributions default to the
-root Apache-2.0 license; no duplicate LICENSE file is generated. Use `--dry-run` to preview destinations,
-`--with-references` to create a linked reference scaffold, or `--help` to see
-flags for non-interactive automation.
-
-For an existing skill directory, import its package instead:
+If you already have a skill directory, import its complete package first:
 
 ```bash
 python3 scripts/contribute.py import ../existing-skill
@@ -68,6 +57,19 @@ In non-interactive mode with no existing value, the default is that same link.
 Selecting a category number records it automatically; no second manual category
 edit or automatic guessing is needed.
 
+If no skill directory exists yet, create one with the interactive local scaffold:
+
+```bash
+python3 scripts/contribute.py new <skill-name>
+```
+
+The command asks for owner, description, category, and runtime requirements and
+permissions, then creates the skill directory and local registration. Original
+contributions default to the root Apache-2.0 license; no duplicate LICENSE file
+is generated. Use `--dry-run` to preview destinations, `--with-references` to
+create a linked reference scaffold, or `--help` to see flags for non-interactive
+automation.
+
 The category must match [the taxonomy](../governance/taxonomy.md) exactly; a
 wrong value prints the allowed set. Bare generic names such as `profile`,
 `benchmark`, `test`, `build` and `deploy` are rejected.
@@ -76,7 +78,7 @@ wrong value prints the allowed set. Bare generic names such as `profile`,
 
 This is the only step no helper can do for the author.
 
-- **`SKILL.md`** -- complete a new scaffold, or review the imported body. Stay at
+- **`SKILL.md`** -- review the imported body, or complete a new scaffold. Stay at
   or below 500 lines and move detail into `references/`.
 - **Bundled files** -- copy any `scripts/`, `references/` or `assets/` the skill
   needs into the skill directory. Everything it needs must be inside it.
