@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "skill": "rewrite-hygon-git-identity",
+  "evaluations": [
+    {
+      "id": "audit-legacy-commit-identities",
+      "skill_should_trigger": true,
+      "prompt": "Audit the main branch of this HYGON repository for legacy sugon or rogon author, committer, email, and commit-message metadata. Do not modify Git or push anything.",
+      "expected_behavior": [
+        "Select read-only audit mode and avoid all history rewrites and remote writes.",
+        "Report the exact ref and Tip, field-level findings, deterministic email mappings, affected commits, signature impact, and other refs that retain old history.",
+        "Do not expose more developer identity data than the remediation requires."
+      ],
+      "unexpected_behavior": [
+        "Pushes a review branch or rewrites the official branch without a separate explicit authorization."
+      ]
+    },
+    {
+      "id": "prepare-offline-identity-rewrite",
+      "skill_should_trigger": true,
+      "prompt": "Prepare an offline dry-run to map @sugon.com, @rogon.com, and @rogon.cn commit emails to the same usernames at @hygon.com, preserving the repository contents and topology.",
+      "expected_behavior": [
+        "Require confirmation that the target branch is frozen before preparing evidence.",
+        "Create independent backup and rewrite mirrors plus an offline bundle in a new private workspace.",
+        "Pause for approval of exact mapping hashes and predicted signature loss before rewriting."
+      ]
+    },
+    {
+      "id": "publish-validated-review-branch",
+      "skill_should_trigger": true,
+      "prompt": "The identity rewrite passed strict validation. Publish the validated Tip to a temporary review branch, but leave the official branch unchanged.",
+      "expected_behavior": [
+        "Treat creation of the review branch as an external write requiring its own explicit authorization.",
+        "Re-read the official remote Tip and stop if it differs from the frozen old Tip.",
+        "Use the validated new Tip and refuse to overwrite an existing review branch."
+      ]
+    },
+    {
+      "id": "ordinary-local-git-identity-config",
+      "skill_should_trigger": false,
+      "prompt": "Set my local git user.name and user.email for future commits in this checkout. Existing commit history must stay unchanged."
+    },
+    {
+      "id": "remove-legacy-name-from-source-files",
+      "skill_should_trigger": false,
+      "prompt": "Replace old Sugon and Rogon branding in source files, license headers, workflow YAML, and documentation across this repository."
+    },
+    {
+      "id": "scan-history-for-leaked-secrets",
+      "skill_should_trigger": false,
+      "prompt": "Find and purge API keys and passwords from every commit in this repository, then run SAST and CVE scans."
+    }
+  ]
+}

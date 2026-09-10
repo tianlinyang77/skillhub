@@ -1,0 +1,4 @@
+interface:
+  display_name: "HYGON Git Commit 身份整改"
+  short_description: "安全审计并重写 Git Commit 中的不规范身份字段"
+  default_prompt: "使用 $rewrite-hygon-git-identity 审计精确目标分支，并安全重写禁止的 Git Commit 身份字段。默认只审计，在每个强制人工审批点暂停。"

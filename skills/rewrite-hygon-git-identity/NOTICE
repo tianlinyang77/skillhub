@@ -1,0 +1,14 @@
+HYGON Git Commit Identity Rewrite Skill
+Copyright (c) 2026 Hygon Information Technology Co., Ltd.
+
+This product bundles git-filter-repo v2.47.0 from:
+https://github.com/newren/git-filter-repo
+
+git-filter-repo is Copyright (c) 2009, 2018-2019 and is distributed under
+the MIT License. The upstream copyright and license notices are preserved in:
+
+  tools/COPYING.git-filter-repo
+  tools/COPYING.mit.git-filter-repo
+
+The bundled git-filter-repo file corresponds to upstream commit
+6f79afc8c90c592a3052e6cc53c2ca8907515bca.

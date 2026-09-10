@@ -3,6 +3,13 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "CI and Release",
+      "description": "HYGON-AI skills for ci and release workflows.",
+      "skills": [
+        "rewrite-hygon-git-identity"
+      ]
+    },
+    {
       "title": "Developer Tools",
       "description": "HYGON-AI skills for developer tools workflows.",
       "skills": [
