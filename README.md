@@ -41,20 +41,21 @@ and are not written for one agent.
 
 ## Add a skill
 
-Create a branch, then use one command to add a local skill. It prompts for
-the owner, description, category, runtime requirements and permissions, and registers the skill locally. Original
-contributions default to the repository's Apache-2.0 license:
-
-```bash
-python3 scripts/contribute.py new my-skill-name
-```
-
-Already have a self-contained skill directory? Import it instead; its `SKILL.md`,
-references, scripts, assets and bundled license material are copied without
-modifying the source:
+Create a branch, then prefer importing an existing self-contained skill directory.
+Its `SKILL.md`, references, scripts, assets and bundled license material are
+copied without modifying the source:
 
 ```bash
 python3 scripts/contribute.py import ../my-existing-skill
+```
+
+Create a skill from scratch only when there is no existing skill directory to
+import. The command prompts for the owner, description, category, runtime
+requirements and permissions, registers the skill locally, and defaults original
+contributions to the repository's Apache-2.0 license:
+
+```bash
+python3 scripts/contribute.py new my-skill-name
 ```
 
 For either path, review the generated Skill Card (lifecycle already defaults to
